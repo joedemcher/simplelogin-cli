@@ -6,3 +6,4 @@ __pycache__/
 
 ### Poetry ###
 poetry.lock
+/config.env
