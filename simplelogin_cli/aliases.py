@@ -18,33 +18,47 @@ logging.basicConfig(
 log = logging.getLogger("rich")
 
 
-def get_aliases(pinned):
-    # print(f"{pinned}, {enabled}, {disabled}, {query}")
+def get_aliases(param, query):
     header = {"Authentication": keyring.get_password("Simplelogin", ACCT_EMAIL)}
-    params = get_params(pinned)
+    params = get_params(param)
     aliases = []
     page_id = 0
     pages = 0
+    if query:
+        payload = {"query": query}
+    else:
+        payload = {}
+    log.debug(payload)
     while True:
+        # TODO catch errors
         response = requests.get(
             url=f"{API_URL}/api/v2/aliases", params=params, headers=header
         )
-        # print(response.text)
-        data = response.json()
-        if data.get("aliases") is not None and pages < 1:
-            for alias in data.get("aliases"):
-                aliases.append(alias)
+        if response.status_code == 200:
+            data = response.json()
+            if len(data.get("aliases")) != 0:
+                aliases.append(data.get("aliases"))
+            else:
+                break
         else:
+            print(f"Error: {response.status_code}")
+            print(response.text)
             break
 
         page_id += 1
         pages += 1
         params["page_id"] = page_id
-    return "No aliases found" if len(aliases) == 0 else aliases
+
+    print("No aliases found.") if len(aliases) == 0 else print(aliases)
 
 
-def get_params(pinned):
+def get_params(param):
     params = {"page_id": 0}
-    if pinned:
-        params["pinned"] = "true"
+    match param:
+        case "pinned":
+            params["pinned"] = "true"
+        case "disabled":
+            params["disabled"] = "true"
+        case "enabled":
+            params["enabled"] = "true"
     return params

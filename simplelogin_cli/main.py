@@ -35,38 +35,42 @@ cli.add_command(login)
 
 @cli.command(help="Search your aliases")
 @click.option(
+    "--all",
+    "params",
+    flag_value="all",
+    default=True,
+    help="All aliases are returned",
+)
+@click.option(
     "-p",
     "--pinned",
-    is_flag=True,
-    show_default=True,
-    default=False,
+    "params",
+    flag_value="pinned",
     help="Only pinned aliases are returned",
 )
-# @click.option(
-#     "-d",
-#     "--disabled",
-#     is_flag=True,
-#     # show_default=True,
-#     default=False,
-#     help="Only disabled aliases are returned",
-# )
-# @click.option(
-#     "-e",
-#     "--enabled",
-#     is_flag=True,
-#     # show_default=True,
-#     default=False,
-#     help="Only enabled aliases are returned",
-# )
-# @click.option(
-#     "-q",
-#     "--query",
-#     default="",
-#     required=False,
-#     help="The query that will be used to search",
-# )
-def alias(pinned):
-    print(aliases.get_aliases(pinned))
+@click.option(
+    "-e",
+    "--enabled",
+    "params",
+    flag_value="enabled",
+    help="Only enabled aliases are returned",
+)
+@click.option(
+    "-d",
+    "--disabled",
+    "params",
+    flag_value="disable",
+    help="Only disabled aliases are returned",
+)
+@click.option(
+    "-q",
+    "--query",
+    default="",
+    required=False,
+    help="The query that will be used for search",
+)
+def alias(params, query):
+    aliases.get_aliases(params, query)
 
 
 cli.add_command(alias)
