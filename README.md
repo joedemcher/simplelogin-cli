@@ -16,7 +16,7 @@ API key is stored in the system's [keyring service](https://pypi.org/project/key
 - [x] Login to account (i.e. `login`)
   - [x] Login with MFA
 - [x] Search aliases (i.e. `alias`)
-  - [x] Search aliases using flags (ex. `alias -p`)
+  - [x] Search aliases using flags (ex. `alias --pinned`)
 - [ ] Get user stats (i.e. `stats`)
 - [ ] Create new alias (maybe `create`)
 
