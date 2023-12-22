@@ -2,7 +2,7 @@
 
 :construction: Currently a work in progress. :construction:
 
-API key is stored in [system keyring service](https://pypi.org/project/keyring/). **Not** plain text.
+API key is stored in the system's [keyring service](https://pypi.org/project/keyring/). **Not** plain text.
 
 ## Capabilities
 - [x] Login to account (i.e. `login`)
