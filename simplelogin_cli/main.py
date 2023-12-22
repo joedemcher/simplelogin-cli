@@ -21,7 +21,7 @@ def cli():
     pass
 
 
-@cli.command()
+@cli.command(help="Login to Simplelogin")
 def login():
     email = input("Enter your email: ")
     password = getpass.getpass("Enter your password: ")
@@ -62,14 +62,15 @@ cli.add_command(login)
     flag_value="disable",
     help="Only disabled aliases are returned",
 )
-@click.option(
-    "-q",
-    "--query",
-    default="",
-    required=False,
-    help="The query that will be used for search",
-)
-def alias(params, query):
+# TODO Add query option
+# @click.option(
+#     "-q",
+#     "--query",
+#     default="",
+#     required=False,
+#     help="The query that will be used for search",
+# )
+def alias(params):
     aliases.get_aliases(params, query)
 
 
