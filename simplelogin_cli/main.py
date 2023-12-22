@@ -3,7 +3,17 @@ import auth
 import aliases
 import getpass
 import keyring
+import logging
 from rich import print
+from rich.logging import RichHandler
+
+# Format logger
+FORMAT = "%(message)s"
+logging.basicConfig(
+    level="NOTSET", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
+)
+
+log = logging.getLogger("rich")
 
 
 @click.group()
@@ -24,14 +34,14 @@ cli.add_command(login)
 
 
 @cli.command(help="Search your aliases")
-# @click.option(
-#     "-p",
-#     "--pinned",
-#     # is_flag=True,
-#     # show_default=True,
-#     default=False,
-#     help="Only pinned aliases are returned",
-# )
+@click.option(
+    "-p",
+    "--pinned",
+    is_flag=True,
+    show_default=True,
+    default=False,
+    help="Only pinned aliases are returned",
+)
 # @click.option(
 #     "-d",
 #     "--disabled",
@@ -55,8 +65,8 @@ cli.add_command(login)
 #     required=False,
 #     help="The query that will be used to search",
 # )
-def alias():
-    print(aliases.get_aliases())
+def alias(pinned):
+    print(aliases.get_aliases(pinned))
 
 
 cli.add_command(alias)
