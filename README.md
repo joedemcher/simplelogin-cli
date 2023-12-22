@@ -4,6 +4,15 @@
 
 API key is stored in the system's [keyring service](https://pypi.org/project/keyring/). **Not** plain text.
 
+**Two** environmental variables must be set:
+
+- `SIMPLELOGIN_API_URL`
+  - Probably `https://app.simplelogin.io`
+- `SIMPLELOGIN_EMAIL`
+  - The email you use to sign into Simplelogin
+
+The first is most likely
+
 ## Capabilities
 
 - [x] Login to account (i.e. `login`)
