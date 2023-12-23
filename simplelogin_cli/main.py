@@ -1,9 +1,12 @@
+#!/usr/bin/env python3
+
 import click
 import auth
-import aliases
+import alias as al
 import getpass
 import keyring
 import logging
+import settings
 from rich import print
 from rich.logging import RichHandler
 
@@ -72,17 +75,18 @@ cli.add_command(login)
 #     help="The query that will be used for search",
 # )
 def alias(filter_flag):
-    print(aliases.list_aliases(filter_flag))
+    print(al.list_aliases(filter_flag))
 
 
 cli.add_command(alias)
 
 
 @cli.command(help="Generate a random alias")
-# @click.option("-u", "--uuid")
-# @click.option("-w", "--word", is_flag=True)
-def random():
-    aliases.generate_random_alias()
+@click.option("--note")
+# TODO Hostname option
+def random(note):
+    mode = settings.get_alias_generation_mode()
+    print(al.generate_random_alias(mode, note))
 
 
 cli.add_command(random)
