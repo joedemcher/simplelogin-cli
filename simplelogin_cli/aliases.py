@@ -18,7 +18,7 @@ logging.basicConfig(
 log = logging.getLogger("rich")
 
 
-def get_aliases(filter_flag):
+def list_aliases(filter_flag):
     header = {"Authentication": keyring.get_password("Simplelogin", ACCT_EMAIL)}
     params = get_params(filter_flag)
     aliases = {"aliases": []}
@@ -61,5 +61,5 @@ def get_params(filter_flag):
     return params
 
 
-def new_random_alias():
+def generate_random_alias():
     return
