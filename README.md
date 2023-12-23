@@ -31,4 +31,10 @@ I am using these tools:
 - [Click](https://click.palletsprojects.com/en/8.1.x/)
 - [Poetry](https://python-poetry.org/)
 
-#### How to contribute
+#### How to run
+
+1. [Install Poetry if you have not](https://python-poetry.org/docs/#installing-with-pipx)
+2. Download this repository
+3. Navigate to the base directory
+4. Run the command `poetry install`
+5. Run the program with `python main.py [COMMAND] [OPTIONS]`
