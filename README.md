@@ -15,10 +15,11 @@ API key is stored in the system's [keyring service](https://pypi.org/project/key
 
 - [x] Login to account (i.e. `login`)
   - [x] Login with MFA
-- [x] Search aliases (i.e. `alias`)
+- [x] Search aliases (i.e. `alias`) (rate limit keeps getting reached, any ideas?)
   - [x] Search aliases using [flags](https://github.com/simple-login/app/blob/master/docs/api.md#get-apiv2aliases) (ex. `alias --pinned`)
 - [ ] Get user stats (i.e. `stats`)
-- [ ] Create new alias (maybe `create`)
+- [ ] Generate custom alias (maybe `create`)
+- [ ] Generate random alias (maybe `random`)
 
 ## Contributions
 

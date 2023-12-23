@@ -18,17 +18,15 @@ logging.basicConfig(
 log = logging.getLogger("rich")
 
 
-def get_aliases(param, query):
+def get_aliases(filter_flag):
     header = {"Authentication": keyring.get_password("Simplelogin", ACCT_EMAIL)}
-    params = get_params(param)
-    aliases = []
+    params = get_params(filter_flag)
+    aliases = {"aliases": []}
     page_id = 0
-    pages = 0
-    if query:
-        payload = {"query": query}
-    else:
-        payload = {}
-    log.debug(payload)
+    # if query:
+    #     payload = {"query": query}
+    # else:
+    #     payload = {}
     while True:
         # TODO catch errors
         response = requests.get(
@@ -37,7 +35,7 @@ def get_aliases(param, query):
         if response.status_code == 200:
             data = response.json()
             if len(data.get("aliases")) != 0:
-                aliases.append(data.get("aliases"))
+                aliases["aliases"] = aliases.get("aliases") + data.get("aliases")
             else:
                 break
         else:
@@ -46,15 +44,14 @@ def get_aliases(param, query):
             break
 
         page_id += 1
-        pages += 1
         params["page_id"] = page_id
 
     print("No aliases found.") if len(aliases) == 0 else print(aliases)
 
 
-def get_params(param):
+def get_params(filter_flag):
     params = {"page_id": 0}
-    match param:
+    match filter_flag:
         case "pinned":
             params["pinned"] = "true"
         case "disabled":
@@ -62,3 +59,7 @@ def get_params(param):
         case "enabled":
             params["enabled"] = "true"
     return params
+
+
+def new_random_alias():
+    return

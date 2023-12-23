@@ -36,7 +36,7 @@ cli.add_command(login)
 @cli.command(help="Search your aliases")
 @click.option(
     "--all",
-    "params",
+    "filter_flag",
     flag_value="all",
     default=True,
     help="All aliases are returned",
@@ -44,22 +44,22 @@ cli.add_command(login)
 @click.option(
     "-p",
     "--pinned",
-    "params",
+    "filter_flag",
     flag_value="pinned",
     help="Only pinned aliases are returned",
 )
 @click.option(
     "-e",
     "--enabled",
-    "params",
+    "filter_flag",
     flag_value="enabled",
     help="Only enabled aliases are returned",
 )
 @click.option(
     "-d",
     "--disabled",
-    "params",
-    flag_value="disable",
+    "filter_flag",
+    flag_value="disabled",
     help="Only disabled aliases are returned",
 )
 # TODO Add query option
@@ -70,11 +70,12 @@ cli.add_command(login)
 #     required=False,
 #     help="The query that will be used for search",
 # )
-def alias(params):
-    aliases.get_aliases(params, query)
+def alias(filter_flag):
+    aliases.get_aliases(filter_flag)
 
 
 cli.add_command(alias)
+
 
 if __name__ == "__main__":
     cli()
