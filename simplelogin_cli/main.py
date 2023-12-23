@@ -82,7 +82,7 @@ cli.add_command(alias)
 
 
 @cli.command(help="Generate a random alias")
-@click.option("--note")
+@click.option("--note", help="Add a note to an alias")
 # TODO Hostname option
 def random(note):
     mode = settings.get_alias_generation_mode()
