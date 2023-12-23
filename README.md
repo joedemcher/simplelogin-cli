@@ -32,7 +32,7 @@ I am using these tools:
 - [Click](https://click.palletsprojects.com/en/8.1.x/)
 - [Poetry](https://python-poetry.org/)
 
-_But I'm not sure if they're overkill? :woozy_face:_
+_But I'm not sure if they're overkill?_ :woozy_face:
 
 #### How to run
 
