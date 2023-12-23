@@ -1,15 +1,17 @@
 # Simplelogin CLI
 
-:construction: Currently a work in progress. :construction:
+:construction: Currently a work in progress :construction:
 
-API key is stored in the system's [keyring service](https://pypi.org/project/keyring/) :key:. **Not** plain text.
+- API key is stored in the system's [keyring service](https://pypi.org/project/keyring/) :key:
 
-**Two** environmental variables must be set:
+  - **Not** plain text.
 
-- `SIMPLELOGIN_API_URL`
-  - `https://app.simplelogin.io` or your domain.
-- `SIMPLELOGIN_EMAIL`
-  - The email you use to sign into Simplelogin.
+- **Two** environmental variables must be set:
+
+  - `SIMPLELOGIN_API_URL`
+    - `https://app.simplelogin.io` or your domain.
+  - `SIMPLELOGIN_EMAIL`
+    - The email you use to sign into Simplelogin.
 
 ## Capabilities
 
@@ -17,7 +19,7 @@ API key is stored in the system's [keyring service](https://pypi.org/project/key
   - [x] Login with MFA
 - [x] Search aliases (`alias`) (rate limit keeps getting reached, any ideas?)
   - [x] Search aliases using [flags](https://github.com/simple-login/app/blob/master/docs/api.md#get-apiv2aliases) (ex. `alias --pinned`)
-- [ ] Get user stats (i.e. `stats`)
+- [ ] Get user stats (`stats`)
 - [ ] Generate custom alias (maybe `create`) :construction:
 - [x] Generate random alias (`random`, with an optional `--note`)
 
