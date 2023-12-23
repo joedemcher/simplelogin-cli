@@ -40,4 +40,4 @@ _But I'm not sure if they're overkill?_ :woozy_face:
 2. Download this repository
 3. Navigate to the base directory
 4. Run the command `poetry install`
-5. Run the program with `python main.py`
+5. Run the program with `python simplelogin_cli/main.py`
