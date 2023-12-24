@@ -100,36 +100,34 @@ def stats():
 
 # TODO check that user is logged in
 @cli.command(help="Generate an alias")
-@click.option(
-    "--prefix", prompt="Alias prefix", help="The user generated prefix for the alias"
-)
-@click.option(
-    "-m",
-    "--mailbox",
-    help="The email address that will own this alias",
-)
+@click.option("--prefix", help="The user generated prefix for the alias")
+# @click.option(
+#     "-m",
+#     "--mailbox",
+#     help="The email address that will own this alias",
+# )
 @click.option("--note", help="Add a note to the alias")
 @click.option("--name", help="Name the alias")
-def create(prefix, mailbox, note, name):
-    if not mailbox:
-        mailboxes = al.get_mailboxes()
-        if len(mailboxes) == 0:
-            print("No mailboxes found")
-            return
-        selected_mailboxes = questionary.checkbox(
-            "Select mailbox", choices=[mailbox for mailbox in mailboxes.keys()]
-        ).ask()
+def create(prefix, note, name):
+    if not prefix:
+        prefix = q.text("Alias prefix:").ask()
+    mailboxes = al.get_mailboxes()
+    if len(mailboxes) == 0:
+        print("No mailboxes found")
+        return
+    selected_mailboxes = q.checkbox(
+        "Select mailbox", choices=[mailbox for mailbox in mailboxes.keys()]
+    ).ask()
     mailbox_ids = []
-    for mailbox in selected_mailboxes:
-        mailbox_ids.append(mailboxes[mailbox])
-
+    for box in selected_mailboxes:
+        mailbox_ids.append(mailboxes[box])
     suffixes = al.get_suffixes()
-    suffix = questionary.select(
+    suffix = q.select(
         "Select your email suffix",
         choices=[key for key in suffixes.keys()],
     ).ask()
 
-    print(al.generate_custom_alias(prefix, mailbox, note, name, suffix, mailbox_ids))
+    print(al.generate_custom_alias(prefix, note, name, suffix, mailbox_ids))
 
 
 if __name__ == "__main__":

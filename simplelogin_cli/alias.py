@@ -77,7 +77,7 @@ def generate_random_alias(mode, note):
     return "Alias could not be created."
 
 
-def generate_custom_alias(prefix, mailbox, note, name, suffix, mailbox_ids):
+def generate_custom_alias(prefix, note, name, suffix, mailbox_ids):
     headers = {
         "Authentication": keyring.get_password("Simplelogin", ACCT_EMAIL),
         "Content-Type": "application/json",
