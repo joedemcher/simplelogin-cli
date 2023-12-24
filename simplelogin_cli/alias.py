@@ -41,7 +41,7 @@ def list_aliases(filter_flag):
         page_id += 1
         params["page_id"] = page_id
 
-    return "No aliases found." if len(aliases) == 0 else aliases
+    return "No aliases found." if len(aliases["aliases"]) == 0 else aliases
 
 
 def get_params(filter_flag):
