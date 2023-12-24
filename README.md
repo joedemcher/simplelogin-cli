@@ -21,8 +21,8 @@
 - [x] Search aliases (`alias`) (rate limit keeps getting reached, any ideas?)
   - [x] Search aliases using [flags](https://github.com/simple-login/app/blob/master/docs/api.md#get-apiv2aliases) (ex. `alias --pinned`)
 - [x] Get user stats (`stats`)
-- [ ] Generate custom alias (maybe `create`) :construction:
-- [x] Generate random alias (`random`, with an optional `--note`)
+- [ ] Generate custom alias (`create`) :construction:
+- [x] Generate random alias (`random`)
 
 ## Contributions
 
