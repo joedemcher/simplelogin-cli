@@ -3,10 +3,10 @@
 import click
 import auth
 import alias as al
-import getpass
 import keyring
 import logging
 import settings
+import questionary as q
 from rich import print
 from rich.logging import RichHandler
 
@@ -25,15 +25,13 @@ def cli():
 
 
 @cli.command(help="Login to Simplelogin")
-def login():
-    email = input("Enter your email: ")
-    password = getpass.getpass("Enter your password: ")
+@click.option("--email", help="The email used to login to Simplelogin")
+def login(email):
+    if not email:
+        email = q.text("Enter your email:").ask()
+    password = q.password("Enter your password:").ask()
     device_name = "SL CLI"
     auth.login(email, password, device_name)
-    print("Logged in successfully.")
-
-
-cli.add_command(login)
 
 
 # TODO check that user is logged in
