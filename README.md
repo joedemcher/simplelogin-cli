@@ -17,9 +17,10 @@
 
 - [x] Login to account (`login`)
   - [x] Login with MFA
+- [ ] Logout (`logout`)
 - [x] Search aliases (`alias`) (rate limit keeps getting reached, any ideas?)
   - [x] Search aliases using [flags](https://github.com/simple-login/app/blob/master/docs/api.md#get-apiv2aliases) (ex. `alias --pinned`)
-- [ ] Get user stats (`stats`)
+- [x] Get user stats (`stats`)
 - [ ] Generate custom alias (maybe `create`) :construction:
 - [x] Generate random alias (`random`, with an optional `--note`)
 

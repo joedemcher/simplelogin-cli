@@ -36,6 +36,7 @@ def login():
 cli.add_command(login)
 
 
+# TODO check that user is logged in
 @cli.command(help="List your aliases")
 @click.option(
     "--all",
@@ -81,6 +82,7 @@ def alias(filter_flag):
 cli.add_command(alias)
 
 
+# TODO check that user is logged in
 @cli.command(help="Generate a random alias")
 @click.option("--note", help="Add a note to the alias")
 # TODO Hostname option
@@ -90,6 +92,13 @@ def random(note):
 
 
 cli.add_command(random)
+
+
+# TODO check that user is logged in
+@cli.command(help="Get user's stats")
+def stats():
+    print(settings.get_user_stats())
+
 
 if __name__ == "__main__":
     cli()
