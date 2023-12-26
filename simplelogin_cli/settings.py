@@ -3,16 +3,16 @@ import keyring
 import os
 import logging
 from rich import print
-from rich.logging import RichHandler
 
 API_URL = os.environ.get("SIMPLELOGIN_API_URL")
 ACCT_EMAIL = os.environ.get("SIMPLELOGIN_EMAIL")
+API_KEY = keyring.get_password("Simplelogin", ACCT_EMAIL)
 
 log = logging.getLogger("rich")
 
 
 def get_alias_generation_mode():
-    headers = {"Authentication": keyring.get_password("Simplelogin", ACCT_EMAIL)}
+    headers = {"Authentication": API_KEY}
 
     response = requests.get(url=f"{API_URL}/api/setting", headers=headers)
 
@@ -21,7 +21,7 @@ def get_alias_generation_mode():
 
 
 def get_user_stats():
-    headers = {"Authentication": keyring.get_password("Simplelogin", ACCT_EMAIL)}
+    headers = {"Authentication": API_KEY}
     url = f"{API_URL}/api/stats"
 
     response = requests.get(url, headers=headers)

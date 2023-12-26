@@ -5,16 +5,16 @@ import keyring
 import os
 import logging
 from rich import print
-from rich.logging import RichHandler
 
 API_URL = os.environ.get("SIMPLELOGIN_API_URL")
 ACCT_EMAIL = os.environ.get("SIMPLELOGIN_EMAIL")
+API_KEY = keyring.get_password("Simplelogin", ACCT_EMAIL)
 
 log = logging.getLogger("rich")
 
 
 def list_aliases(filter_flag):
-    headers = {"Authentication": keyring.get_password("Simplelogin", ACCT_EMAIL)}
+    headers = {"Authentication": API_KEY}
     params = get_params(filter_flag)
     aliases = {"aliases": []}
     page_id = 0
@@ -37,7 +37,7 @@ def list_aliases(filter_flag):
             else:
                 break
         else:
-            print(f"Error: {response.status_code}")
+            print(f"Request error: {response.status_code}")
             print(response.text)
             break
 
@@ -61,7 +61,7 @@ def get_params(filter_flag):
 
 def generate_random_alias(mode, note):
     headers = {
-        "Authentication": keyring.get_password("Simplelogin", ACCT_EMAIL),
+        "Authentication": API_KEY,
         "Content-Type": "application/json",
     }
     params = {"mode": mode}
@@ -82,7 +82,7 @@ def generate_random_alias(mode, note):
 
 def generate_custom_alias(prefix, note, name, suffix, mailbox_ids):
     headers = {
-        "Authentication": keyring.get_password("Simplelogin", ACCT_EMAIL),
+        "Authentication": API_KEY,
         "Content-Type": "application/json",
     }
 
@@ -113,7 +113,7 @@ def generate_custom_alias(prefix, note, name, suffix, mailbox_ids):
 
 
 def get_suffixes():
-    headers = {"Authentication": keyring.get_password("Simplelogin", ACCT_EMAIL)}
+    headers = {"Authentication": API_KEY}
     url = f"{API_URL}/api/v5/alias/options"
 
     response = requests.get(url, headers=headers)
@@ -128,7 +128,7 @@ def get_suffixes():
 
 
 def get_mailboxes():
-    headers = {"Authentication": keyring.get_password("Simplelogin", ACCT_EMAIL)}
+    headers = {"Authentication": API_KEY}
     url = f"{API_URL}/api/v2/mailboxes"
 
     response = requests.get(url, headers=headers)
