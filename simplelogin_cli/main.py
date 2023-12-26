@@ -2,7 +2,7 @@
 
 import click
 import auth
-import alias as al
+import alias as aleeas
 import keyring
 import logging
 import settings
@@ -74,7 +74,8 @@ def login(email):
 #     help="The query that will be used for search",
 # )
 def alias(filter_flag):
-    print(al.list_aliases(filter_flag))
+    aliases = aleeas.list_aliases(filter_flag)
+    print(aliases)
 
 
 cli.add_command(alias)
@@ -86,7 +87,8 @@ cli.add_command(alias)
 # TODO Hostname option
 def random(note):
     mode = settings.get_alias_generation_mode()
-    print(al.generate_random_alias(mode, note))
+    alias = aleeas.generate_random_alias(mode, note)
+    print(alias)
 
 
 cli.add_command(random)
@@ -95,7 +97,8 @@ cli.add_command(random)
 # TODO check that user is logged in
 @cli.command(help="Get user's stats")
 def stats():
-    print(settings.get_user_stats())
+    stats = settings.get_user_stats()
+    print(stats)
 
 
 # TODO check that user is logged in
@@ -111,23 +114,31 @@ def stats():
 def create(prefix, note, name):
     if not prefix:
         prefix = q.text("Alias prefix:").ask()
-    mailboxes = al.get_mailboxes()
+
+    mailboxes = aleeas.get_mailboxes()
+
     if len(mailboxes) == 0:
         print("No mailboxes found")
-        return
+        exit(0)
+
     selected_mailboxes = q.checkbox(
         "Select mailbox", choices=[mailbox for mailbox in mailboxes.keys()]
     ).ask()
+
     mailbox_ids = []
+
     for box in selected_mailboxes:
         mailbox_ids.append(mailboxes[box])
-    suffixes = al.get_suffixes()
+
+    suffixes = aleeas.get_suffixes()
+
     suffix = q.select(
         "Select your email suffix",
         choices=[key for key in suffixes.keys()],
     ).ask()
 
-    print(al.generate_custom_alias(prefix, note, name, suffix, mailbox_ids))
+    response = aleeas.generate_custom_alias(prefix, note, name, suffix, mailbox_ids)
+    print(response)
 
 
 if __name__ == "__main__":

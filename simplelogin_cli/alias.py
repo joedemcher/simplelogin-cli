@@ -22,13 +22,16 @@ def list_aliases(filter_flag):
     #     payload = {"query": query}
     # else:
     #     payload = {}
+
     while True:
         # TODO catch errors
         response = requests.get(
             url=f"{API_URL}/api/v2/aliases", params=params, headers=headers
         )
+
         if response.status_code == 200:
             data = response.json()
+
             if len(data.get("aliases")) != 0:
                 aliases["aliases"] = aliases.get("aliases") + data.get("aliases")
             else:
@@ -82,6 +85,7 @@ def generate_custom_alias(prefix, note, name, suffix, mailbox_ids):
         "Authentication": keyring.get_password("Simplelogin", ACCT_EMAIL),
         "Content-Type": "application/json",
     }
+
     url = f"{API_URL}/api/v3/alias/custom/new"
     payload = {
         "alias_prefix": prefix,
@@ -91,6 +95,7 @@ def generate_custom_alias(prefix, note, name, suffix, mailbox_ids):
 
     if note:
         payload["note"] = note
+
     if name:
         payload["name"] = name
 
@@ -103,6 +108,7 @@ def generate_custom_alias(prefix, note, name, suffix, mailbox_ids):
         return data
     except requests.exceptions.RequestException as e:
         print(f"Request error: {e}")
+
     return "Alias could not be created."
 
 
@@ -129,6 +135,7 @@ def get_mailboxes():
     data = response.json()
 
     mailboxes = {}
+
     for mailbox in data["mailboxes"]:
         mailboxes[mailbox["email"]] = mailbox["id"]
 
