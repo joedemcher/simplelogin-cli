@@ -21,6 +21,8 @@ logging.basicConfig(
 
 log = logging.getLogger("rich")
 
+ACCT_EMAIL = os.environ.get("SIMPLELOGIN_EMAIL")
+
 
 @click.group()
 def cli():
@@ -146,6 +148,7 @@ def create(prefix, note, name):
     print(response)
 
 
+# TODO Deal with nonexistence of env vars
 def check_for_env_vars():
     if "SIMPLELOGIN_API_URL" in os.environ.keys():
         api_url = os.environ.get("SIMPLELOGIN_API_URL")
