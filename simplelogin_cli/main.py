@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import click
 import auth
 import alias as aleeas
@@ -7,6 +8,8 @@ import keyring
 import logging
 import settings
 import questionary as q
+import validators
+from validators import ValidationError
 from rich import print
 from rich.logging import RichHandler
 
@@ -97,6 +100,8 @@ cli.add_command(random)
 # TODO check that user is logged in
 @cli.command(help="Get user's stats")
 def stats():
+    if not pre_check():
+        exit(1)
     stats = settings.get_user_stats()
     print(stats)
 
@@ -139,6 +144,40 @@ def create(prefix, note, name):
 
     response = aleeas.generate_custom_alias(prefix, note, name, suffix, mailbox_ids)
     print(response)
+
+
+def check_for_env_vars():
+    if "SIMPLELOGIN_API_URL" in os.environ.keys():
+        api_url = os.environ.get("SIMPLELOGIN_API_URL")
+        valid_url = validators.url(api_url.strip())
+
+        if isinstance(valid_url, ValidationError):
+            return False
+
+    if "SIMPLELOGIN_EMAIL" in os.environ.keys():
+        email = os.environ.get("SIMPLELOGIN_EMAIL")
+        valid_email = validators.email(email)
+
+        if isinstance(valid_email, ValidationError):
+            return False
+
+    return True
+
+
+def check_for_password():
+    return False if keyring.get_password("Simplelogin", ACCT_EMAIL) is None else True
+
+
+def pre_check():
+    if not check_for_env_vars():
+        print("Environmental variables are not correctly set")
+        return False
+
+    if not check_for_password():
+        print("You are not logged in, try 'sl login'")
+        return False
+
+    return True
 
 
 if __name__ == "__main__":
