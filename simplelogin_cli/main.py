@@ -34,12 +34,15 @@ def cli():
 def login(email):
     if not email:
         email = q.text("Enter your email:").ask()
+
     password = q.password("Enter your password:").ask()
     device_name = "SL CLI"
+
     auth.login(email, password, device_name)
 
+    print("User has been logged in")
 
-# TODO check that user is logged in
+
 @cli.command(help="List your aliases")
 @click.option(
     "--all",
@@ -79,24 +82,23 @@ def login(email):
 #     help="The query that will be used for search",
 # )
 def alias(filter_flag):
+    if not pre_check():
+        exit(1)
+
     aliases = aleeas.list_aliases(filter_flag)
     print(aliases)
 
 
-cli.add_command(alias)
-
-
-# TODO check that user is logged in
 @cli.command(help="Generate a random alias")
 @click.option("--note", help="Add a note to the alias")
 # TODO Hostname option
 def random(note):
+    if not pre_check():
+        exit(1)
+
     mode = settings.get_alias_generation_mode()
-    alias = aleeas.generate_random_alias(mode, note)
-    print(alias)
-
-
-cli.add_command(random)
+    random_alias = aleeas.generate_random_alias(mode, note)
+    print(random_alias)
 
 
 # TODO check that user is logged in
@@ -104,6 +106,7 @@ cli.add_command(random)
 def stats():
     if not pre_check():
         exit(1)
+
     stats = settings.get_user_stats()
     print(stats)
 
@@ -128,9 +131,15 @@ def create(prefix, note, name):
         print("No mailboxes found")
         exit(0)
 
-    selected_mailboxes = q.checkbox(
-        "Select mailbox", choices=[mailbox for mailbox in mailboxes.keys()]
-    ).ask()
+    while True:
+        selected_mailboxes = q.checkbox(
+            "Select mailbox(es)", choices=[mailbox for mailbox in mailboxes.keys()]
+        ).ask()
+
+        if len(selected_mailboxes) != 0:
+            break
+
+        print("Please select at least one mailbox")
 
     mailbox_ids = []
 
@@ -144,8 +153,8 @@ def create(prefix, note, name):
         choices=[key for key in suffixes.keys()],
     ).ask()
 
-    response = aleeas.generate_custom_alias(prefix, note, name, suffix, mailbox_ids)
-    print(response)
+    custom_alias = aleeas.generate_custom_alias(prefix, note, name, suffix, mailbox_ids)
+    print(custom_alias)
 
 
 # TODO Deal with nonexistence of env vars
@@ -168,7 +177,8 @@ def check_for_env_vars():
 
 
 def check_for_password():
-    return False if keyring.get_password("Simplelogin", ACCT_EMAIL) is None else True
+    password = keyring.get_password("Simplelogin", ACCT_EMAIL)
+    return False if password is None else True
 
 
 def pre_check():

@@ -12,30 +12,45 @@ log = logging.getLogger("rich")
 
 
 def get_alias_generation_mode():
-    headers = {"Authentication": API_KEY}
+    try:
+        headers = {"Authentication": API_KEY}
 
-    response = requests.get(url=f"{API_URL}/api/setting", headers=headers)
+        response = requests.get(url=f"{API_URL}/api/setting", headers=headers)
 
-    data = response.json()
-    return data["alias_generator"]
+        data = response.json()
+
+        return data["alias_generator"]
+    except requests.exceptions.RequestException as e:
+        log.error(f"Request error: {e}")
+        print("Error fetching alias generation mode")
+        exit(1)
 
 
 def get_user_stats():
     headers = {"Authentication": API_KEY}
     url = f"{API_URL}/api/stats"
 
-    response = requests.get(url, headers=headers)
+    try:
+        response = requests.get(url, headers=headers)
 
-    data = response.json()
-    stats = {}
-    for key, val in data.items():
-        match key:
-            case "nb_alias":
-                stats["num_alias"] = val
-            case "nb_block":
-                stats["num_block"] = val
-            case "nb_forward":
-                stats["num_forward"] = val
-            case "nb_reply":
-                stats["num_reply"] = val
+        response.raise_for_status()
+
+        data = response.json()
+        stats = {}
+
+        for key, val in data.items():
+            match key:
+                case "nb_alias":
+                    stats["num_alias"] = val
+                case "nb_block":
+                    stats["num_block"] = val
+                case "nb_forward":
+                    stats["num_forward"] = val
+                case "nb_reply":
+                    stats["num_reply"] = val
+    except requests.exceptions.RequestException as e:
+        log.error(f"Request error: {e}")
+        print("Error fetching user's stats")
+        exit(1)
+
     return stats

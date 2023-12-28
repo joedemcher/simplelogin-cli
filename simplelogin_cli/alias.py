@@ -24,22 +24,25 @@ def list_aliases(filter_flag):
     #     payload = {}
 
     while True:
-        # TODO catch errors
-        response = requests.get(
-            url=f"{API_URL}/api/v2/aliases", params=params, headers=headers
-        )
+        try:
+            response = requests.get(
+                url=f"{API_URL}/api/v2/aliases", params=params, headers=headers
+            )
 
-        if response.status_code == 200:
+            response.raise_for_status()
+
             data = response.json()
 
             if len(data.get("aliases")) != 0:
-                aliases["aliases"] = aliases.get("aliases") + data.get("aliases")
+                combined_aliases = aliases.get("aliases") + data.get("aliases")
+                aliases["aliases"] = combined_aliases
             else:
                 break
-        else:
-            print(f"Request error: {response.status_code}")
-            print(response.text)
-            break
+
+        except requests.exceptions.RequestException as e:
+            log.error(f"Request error: {e}")
+            print("Error fetching all aliases")
+            exit(1)
 
         page_id += 1
         params["page_id"] = page_id
@@ -49,6 +52,7 @@ def list_aliases(filter_flag):
 
 def get_params(filter_flag):
     params = {"page_id": 0}
+
     match filter_flag:
         case "pinned":
             params["pinned"] = "true"
@@ -56,6 +60,7 @@ def get_params(filter_flag):
             params["disabled"] = "true"
         case "enabled":
             params["enabled"] = "true"
+
     return params
 
 
@@ -69,14 +74,15 @@ def generate_random_alias(mode, note):
     url = f"{API_URL}/api/alias/random/new"
 
     try:
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.post(url, headers=headers, json=payload, params=params)
 
         response.raise_for_status()
 
         data = response.json()
         return data
     except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
+        log.error(f"Request error: {e}")
+
     return "Alias could not be created."
 
 
@@ -87,6 +93,7 @@ def generate_custom_alias(prefix, note, name, suffix, mailbox_ids):
     }
 
     url = f"{API_URL}/api/v3/alias/custom/new"
+
     payload = {
         "alias_prefix": prefix,
         "signed_suffix": suffix,
@@ -107,7 +114,7 @@ def generate_custom_alias(prefix, note, name, suffix, mailbox_ids):
         data = response.json()
         return data
     except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
+        log.error(f"Request error: {e}")
 
     return "Alias could not be created."
 
@@ -116,27 +123,40 @@ def get_suffixes():
     headers = {"Authentication": API_KEY}
     url = f"{API_URL}/api/v5/alias/options"
 
-    response = requests.get(url, headers=headers)
-    data = response.json()
+    try:
+        response = requests.get(url, headers=headers)
 
-    suffixes = {}
+        response.raise_for_status()
 
-    for suffix in data["suffixes"]:
-        suffixes[suffix["suffix"]] = suffix["signed_suffix"]
+        data = response.json()
 
-    return suffixes
+        suffixes = {}
+
+        for suffix in data["suffixes"]:
+            suffixes[suffix["suffix"]] = suffix["signed_suffix"]
+
+        return suffixes
+    except requests.exceptions.RequestException as e:
+        log.error(f"Request error: {e}")
+        print("Could not fetch suffixes")
+        exit(1)
 
 
 def get_mailboxes():
     headers = {"Authentication": API_KEY}
     url = f"{API_URL}/api/v2/mailboxes"
 
-    response = requests.get(url, headers=headers)
-    data = response.json()
+    try:
+        response = requests.get(url, headers=headers)
+        data = response.json()
 
-    mailboxes = {}
+        mailboxes = {}
 
-    for mailbox in data["mailboxes"]:
-        mailboxes[mailbox["email"]] = mailbox["id"]
+        for mailbox in data["mailboxes"]:
+            mailboxes[mailbox["email"]] = mailbox["id"]
 
-    return mailboxes
+        return mailboxes
+    except requests.exceptions.RequestException as e:
+        log.error(f"Request error {e}")
+        print("Could not fetch mailboxes")
+        exit(1)
