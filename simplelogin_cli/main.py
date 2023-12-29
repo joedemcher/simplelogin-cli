@@ -43,6 +43,13 @@ def login(email):
     print("User has been logged in")
 
 
+@click.command(help="Logout of Simplelogin")
+def logout():
+    if auth.logout():
+        print("User has been logged out")
+    print("User has not been logged out")
+
+
 @cli.command(help="List your aliases")
 @click.option(
     "--all",

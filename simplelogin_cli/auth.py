@@ -38,9 +38,11 @@ def login(email, password, device):
 
 
 def mfa(email, mfa_token, mfa_key, device_name):
+    url = f"{API_URL}/api/auth/mfa"
     payload = {"mfa_token": mfa_token, "mfa_key": mfa_key, "device": device_name}
+
     try:
-        response = requests.post(f"{API_URL}/api/auth/mfa", json=payload)
+        response = requests.post(url, json=payload)
 
         data = response.json()
 
@@ -49,3 +51,8 @@ def mfa(email, mfa_token, mfa_key, device_name):
         log.error(f"Request error: {e}")
         print("User login failed")
         exit(1)
+
+
+# TODO write logout method
+def logout():
+    return False
