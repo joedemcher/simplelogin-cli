@@ -6,6 +6,8 @@ import os
 import logging
 from rich import print
 
+
+# TODO remove this maybe to an API class?
 API_URL = os.environ.get("SIMPLELOGIN_API_URL")
 ACCT_EMAIL = os.environ.get("SIMPLELOGIN_EMAIL")
 API_KEY = keyring.get_password("Simplelogin", ACCT_EMAIL)

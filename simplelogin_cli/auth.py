@@ -21,6 +21,7 @@ def login(email, password, device):
 
         data = response.json()
 
+        # TODO loop for correct mfa response maybe twice?
         if data.get("mfa_enabled"):
             mfa_token = q.password("Enter your OTP:").ask()
             api_key = mfa(email, mfa_token, data.get("mfa_key"), device)
