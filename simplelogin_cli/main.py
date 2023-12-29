@@ -120,7 +120,7 @@ def stats():
 
 # TODO check that user is logged in
 @cli.command(help="Generate an alias")
-@click.option("--prefix", help="The user generated prefix for the alias")
+@click.option("-p", "--prefix", help="The user generated prefix for the alias")
 # @click.option(
 #     "-m",
 #     "--mailbox",
