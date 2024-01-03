@@ -43,9 +43,8 @@ def mfa(email, mfa_token, mfa_key, device_name):
 
     try:
         response = requests.post(url, json=payload)
-
+        response.raise_for_status()
         data = response.json()
-
         return data.get("api_key")
     except requests.exceptions.RequestException as e:
         log.error(f"Request error: {e}")
@@ -53,6 +52,20 @@ def mfa(email, mfa_token, mfa_key, device_name):
         exit(1)
 
 
-# TODO write logout method
-def logout():
-    return False
+def logout(ACCT_EMAIL):
+    # if force:
+    #     keyring.delete_password("Simplelogin", ACCT_EMAIL)
+
+    url = f"{API_URL}/api/logout"
+    API_KEY = keyring.get_password("Simplelogin", ACCT_EMAIL)
+    headers = {"Authentication": API_KEY}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        keyring.delete_password("Simplelogin", ACCT_EMAIL)
+    except requests.exceptions.RequestException as e:
+        log.error(f"Request error: {e}")
+        print("Error logging out")
+        return False
+    return True

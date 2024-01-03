@@ -88,6 +88,7 @@ def generate_random_alias(mode, note):
     return "Alias could not be created."
 
 
+# Keep getting 412 error because it's taking too long to create an alias¿
 def generate_custom_alias(prefix, note, name, suffix, mailbox_ids):
     headers = {
         "Authentication": API_KEY,
@@ -121,6 +122,7 @@ def generate_custom_alias(prefix, note, name, suffix, mailbox_ids):
     return "Alias could not be created."
 
 
+# TODO Check that user is able to make new alias
 def get_suffixes():
     headers = {"Authentication": API_KEY}
     url = f"{API_URL}/api/v5/alias/options"
