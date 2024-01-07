@@ -148,12 +148,14 @@ def create(prefix, note, name):
 
     suffixes = aleeas.get_suffixes()
 
-    suffix = q.select(
+    suffix_key = q.select(
         "Select your email suffix",
         choices=[key for key in suffixes.keys()],
     ).ask()
 
-    custom_alias = aleeas.generate_custom_alias(prefix, note, name, suffix, mailbox_ids)
+    custom_alias = aleeas.generate_custom_alias(
+        prefix, note, name, suffixes.get(suffix_key), mailbox_ids
+    )
     print(custom_alias)
 
 
