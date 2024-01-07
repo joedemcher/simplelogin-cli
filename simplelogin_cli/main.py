@@ -43,6 +43,17 @@ def login(email):
     print("User has been logged in")
 
 
+@cli.command(help="Logout of Simplelogin")
+def logout():
+    if not pre_check():
+        exit(1)
+
+    if auth.logout(ACCT_EMAIL):
+        print("User has been logged out")
+
+    # print("User has not been logged out")
+
+
 @cli.command(help="List your aliases")
 @click.option(
     "--all",
@@ -113,7 +124,7 @@ def stats():
 
 # TODO check that user is logged in
 @cli.command(help="Generate an alias")
-@click.option("--prefix", help="The user generated prefix for the alias")
+@click.option("-p", "--prefix", help="The user generated prefix for the alias")
 # @click.option(
 #     "-m",
 #     "--mailbox",
@@ -122,6 +133,9 @@ def stats():
 @click.option("--note", help="Add a note to the alias")
 @click.option("--name", help="Name the alias")
 def create(prefix, note, name):
+    if not pre_check():
+        exit(1)
+
     if not prefix:
         prefix = q.text("Alias prefix:").ask()
 

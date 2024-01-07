@@ -38,14 +38,34 @@ def login(email, password, device):
 
 
 def mfa(email, mfa_token, mfa_key, device_name):
+    url = f"{API_URL}/api/auth/mfa"
     payload = {"mfa_token": mfa_token, "mfa_key": mfa_key, "device": device_name}
+
     try:
-        response = requests.post(f"{API_URL}/api/auth/mfa", json=payload)
-
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
         data = response.json()
-
         return data.get("api_key")
     except requests.exceptions.RequestException as e:
         log.error(f"Request error: {e}")
         print("User login failed")
         exit(1)
+
+
+def logout(ACCT_EMAIL):
+    # if force:
+    #     keyring.delete_password("Simplelogin", ACCT_EMAIL)
+
+    url = f"{API_URL}/api/logout"
+    API_KEY = keyring.get_password("Simplelogin", ACCT_EMAIL)
+    headers = {"Authentication": API_KEY}
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        keyring.delete_password("Simplelogin", ACCT_EMAIL)
+    except requests.exceptions.RequestException as e:
+        log.error(f"Request error: {e}")
+        print("Error logging out")
+        return False
+    return True
