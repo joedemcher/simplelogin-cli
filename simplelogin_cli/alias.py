@@ -152,6 +152,7 @@ def get_mailboxes():
 
     try:
         response = requests.get(url, headers=headers)
+        response.raise_for_status()
         data = response.json()
 
         mailboxes = {}
@@ -163,4 +164,33 @@ def get_mailboxes():
     except requests.exceptions.RequestException as e:
         log.error(f"Request error {e}")
         print("Could not fetch mailboxes")
+        exit(1)
+
+
+def delete_alias(alias_id):
+    headers = {"Authentication": API_KEY}
+    url = f"{API_URL}/api/aliases/{alias_id}"
+
+    try:
+        response = requests.delete(url, headers=headers)
+        response.raise_for_status()
+        print("Alias deleted")
+    except requests.exceptions.RequestException as e:
+        log.error(f"Request error: {e}")
+        print("Could not delete alias")
+        exit(1)
+
+
+def get_alias(alias_id):
+    headers = {"Authentication": API_KEY}
+    url = f"{API_URL}/api/aliases/{alias_id}"
+    #  params = {"alias_id": alias_id}
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        return data
+    except requests.exceptions.RequestException as e:
+        log.error(f"Request error: {e}")
+        print("Could not get alias to confirm")
         exit(1)
