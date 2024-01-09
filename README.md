@@ -22,6 +22,7 @@
 - [x] Generate custom alias (`create`)
 - [x] Generate random alias (`random`)
 - [x] Delete an alias (`delete`)
+- [x] Toggle an alias (`toggle`)
 - [x] `--help` available for all commands
 
 ## Contributions

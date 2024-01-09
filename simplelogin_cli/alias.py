@@ -184,7 +184,7 @@ def delete_alias(alias_id):
 def get_alias(alias_id):
     headers = {"Authentication": API_KEY}
     url = f"{API_URL}/api/aliases/{alias_id}"
-    #  params = {"alias_id": alias_id}
+
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -193,4 +193,19 @@ def get_alias(alias_id):
     except requests.exceptions.RequestException as e:
         log.error(f"Request error: {e}")
         print("Could not get alias to confirm")
+        exit(1)
+
+
+def toggle_alias(alias_id):
+    headers = {"Authentication": API_KEY}
+    url = f"{API_URL}/api/aliases/{alias_id}/toggle"
+
+    try:
+        response = requests.post(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        return data
+    except requests.exceptions.RequestException as e:
+        log.error(f"Request error: {e}")
+        print("Could not toggle alias")
         exit(1)

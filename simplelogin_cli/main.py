@@ -176,6 +176,19 @@ def create(prefix, note, name):
     print(custom_alias)
 
 
+@cli.command(help="Toggle an alias on/off")
+@click.option("-a", help="The alias ID that will be toggled")
+def toggle(a):
+    if not pre_check():
+        exit(1)
+
+    if not a:
+        a = q.text("Alias ID:").ask()
+
+    toggled = aleeas.toggle_alias(a)
+    print("Alias enabled") if toggled.get("enabled") else print("Alias disabled")
+
+
 def select_mailboxes(mailboxes):
     while True:
         selected_mailboxes = q.checkbox(
