@@ -2,9 +2,7 @@
 
 :construction: Currently a work in progress :construction:
 
-- API key is stored in the system's [keyring service](https://pypi.org/project/keyring/) :key:
-
-  - **Not** plain text.
+- The API key is stored securely in the system's [keyring service](https://pypi.org/project/keyring/) :key:
 
 - **Two** environmental variables must be set:
 
