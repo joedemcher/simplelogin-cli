@@ -112,7 +112,22 @@ def random(note):
     print(random_alias)
 
 
-# TODO check that user is logged in
+@cli.command(help="Delete an alias")
+@click.option("-a", help="The alias id of the alias that will be deleted")
+def delete(a):
+    if not pre_check():
+        exit(1)
+
+    if not a:
+        a = q.text("Alias ID:").ask()
+
+    confirm_alias = aleeas.get_alias(a)
+    print(confirm_alias)
+    confirm = q.confirm("Are you sure you want to delete the above alias?", False).ask()
+    if confirm:
+        aleeas.delete_alias(a)
+
+
 @cli.command(help="Get user's stats")
 def stats():
     if not pre_check():
@@ -145,6 +160,23 @@ def create(prefix, note, name):
         print("No mailboxes found")
         exit(0)
 
+    mailbox_ids = select_mailboxes(mailboxes)
+
+    suffixes = aleeas.get_suffixes()
+
+    suffix_key = q.select(
+        "Select your email suffix",
+        choices=[key for key in suffixes.keys()],
+    ).ask()
+
+    custom_alias = aleeas.generate_custom_alias(
+        prefix, note, name, suffixes.get(suffix_key), mailbox_ids
+    )
+
+    print(custom_alias)
+
+
+def select_mailboxes(mailboxes):
     while True:
         selected_mailboxes = q.checkbox(
             "Select mailbox(es)", choices=[mailbox for mailbox in mailboxes.keys()]
@@ -160,17 +192,7 @@ def create(prefix, note, name):
     for box in selected_mailboxes:
         mailbox_ids.append(mailboxes[box])
 
-    suffixes = aleeas.get_suffixes()
-
-    suffix_key = q.select(
-        "Select your email suffix",
-        choices=[key for key in suffixes.keys()],
-    ).ask()
-
-    custom_alias = aleeas.generate_custom_alias(
-        prefix, note, name, suffixes.get(suffix_key), mailbox_ids
-    )
-    print(custom_alias)
+    return mailbox_ids
 
 
 # TODO Deal with nonexistence of env vars

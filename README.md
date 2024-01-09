@@ -21,6 +21,7 @@
 - [x] Get user stats (`stats`)
 - [x] Generate custom alias (`create`)
 - [x] Generate random alias (`random`)
+- [x] Delete an alias (`delete`)
 - [x] `--help` available for all commands
 
 ## Contributions
