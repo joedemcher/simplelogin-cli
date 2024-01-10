@@ -16,7 +16,10 @@ from rich.logging import RichHandler
 # Format logger
 FORMAT = "%(message)s"
 logging.basicConfig(
-    level="NOTSET", format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
+    level="WARN",
+    format=FORMAT,
+    datefmt="[%X]",
+    handlers=[RichHandler(rich_tracebacks=True, tracebacks_suppress=[click])],
 )
 
 log = logging.getLogger("rich")
