@@ -36,8 +36,7 @@ def list_aliases(filter_flag):
             data = response.json()
 
             if len(data.get("aliases")) != 0:
-                combined_aliases = aliases.get("aliases") + data.get("aliases")
-                aliases["aliases"] = combined_aliases
+                aliases["aliases"] = aliases.get("aliases") + data.get("aliases")
             else:
                 break
 
