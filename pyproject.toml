@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "simplelogin-cli"
+name = "sl-cli"
 version = "0.1.0"
-description = ""
+description = "A CLI tool for Simplelogin"
 authors = ["Joseph Demcher <joedemcher@gmail.com>"]
 readme = "README.md"
 
