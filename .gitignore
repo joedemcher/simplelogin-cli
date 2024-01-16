@@ -4,12 +4,5 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-### Poetry ###
-poetry.lock
-/config.env
-
 ### Mac ###
 .DS_Store
-
-### VS Code ###
-.vscode
