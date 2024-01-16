@@ -1,6 +1,6 @@
 # Simplelogin CLI
 
-A command line interface for Simplelogin. 🚧
+A command line interface for Simplelogin.
 
 ## Capabilities
 
@@ -15,11 +15,11 @@ A command line interface for Simplelogin. 🚧
 - [x] Delete an alias (`delete`)
 - [x] Disable/enable an alias (`toggle`)
 - [x] `--help` available for all commands
+- [x] Installable via `pip install simplelogin`
 
 ## Todos
 
-- [ ] Installable via `pip` 🚧
-- [ ] Consolidate `auth.py` into `settings.py`
+- [ ] Consolidate `auth.py` into `settings.py` :construction:
 - [ ] Tests
 - [ ] Better commenting
 
