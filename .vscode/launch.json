@@ -8,7 +8,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "simplelogin_cli/main.py",
+            "program": "sl-cli/main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": ["login"]
