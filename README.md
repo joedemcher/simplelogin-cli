@@ -34,4 +34,4 @@ If you would like to contribute in any way feel free to open a [pull request](ht
 2. Clone this repository
 3. Navigate to the base directory
 4. Install the dependencies (`poetry install`)
-5. Run the program (`poetry run python simplelogin_cli/main.py`)
+5. Run the program (`poetry run python simplelogin/main.py`)
