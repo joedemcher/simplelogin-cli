@@ -19,6 +19,7 @@ A command line interface for Simplelogin.
 
 ## Todos
 
+- [ ] Bring down the required Python version (currently requires Python 3.12 for no good reason)
 - [ ] Consolidate `auth.py` into `settings.py` :construction:
 - [ ] Tests
 - [ ] Better commenting
