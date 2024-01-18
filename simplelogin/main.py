@@ -2,16 +2,17 @@
 
 import os
 import click
-import auth
-import alias as aleeas
 import keyring
 import logging
-import settings
 import questionary as q
 import validators
+
 from validators import ValidationError
 from rich import print
 from rich.logging import RichHandler
+
+import alias as aleeas
+import settings
 
 # Format logger
 FORMAT = "%(message)s"
@@ -41,7 +42,7 @@ def login(email):
     password = q.password("Enter your password:").ask()
     device_name = "SL CLI"
 
-    auth.login(email, password, device_name)
+    settings.login(email, password, device_name)
 
     print("User has been logged in")
 
@@ -51,7 +52,7 @@ def logout():
     if not pre_check():
         exit(1)
 
-    if auth.logout(ACCT_EMAIL):
+    if settings.logout(ACCT_EMAIL):
         print("User has been logged out")
 
     # print("User has not been logged out")
