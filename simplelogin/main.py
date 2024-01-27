@@ -212,23 +212,23 @@ def select_mailboxes(mailboxes):
     return mailbox_ids
 
 
-# TODO Deal with nonexistence of env vars
 def check_for_env_vars():
-    if "SIMPLELOGIN_API_URL" in os.environ.keys():
+    if (
+        "SIMPLELOGIN_API_URL" in os.environ.keys()
+        and "SIMPLELOGIN_EMAIL" in os.environ.keys()
+    ):
         api_url = os.environ.get("SIMPLELOGIN_API_URL")
         valid_url = validators.url(api_url.strip())
-
-        if isinstance(valid_url, ValidationError):
-            return False
-
-    if "SIMPLELOGIN_EMAIL" in os.environ.keys():
         email = os.environ.get("SIMPLELOGIN_EMAIL")
         valid_email = validators.email(email)
 
-        if isinstance(valid_email, ValidationError):
-            return False
-
-    return True
+        return (
+            False
+            if isinstance(valid_url, ValidationError)
+            or isinstance(valid_email, ValidationError)
+            else True
+        )
+    return False
 
 
 def check_for_password():
