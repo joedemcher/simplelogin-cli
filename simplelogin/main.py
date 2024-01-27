@@ -194,6 +194,9 @@ def toggle(a):
 
 
 def select_mailboxes(mailboxes):
+    """
+    Prompts the user to choose their mailbox(es) for alias generation.
+    """
     while True:
         selected_mailboxes = q.checkbox(
             "Select mailbox(es)", choices=[mailbox for mailbox in mailboxes.keys()]
@@ -213,6 +216,9 @@ def select_mailboxes(mailboxes):
 
 
 def check_for_env_vars():
+    """
+    Confirms the  necessary environmental variables are set correctly.
+    """
     if (
         "SIMPLELOGIN_API_URL" in os.environ.keys()
         and "SIMPLELOGIN_EMAIL" in os.environ.keys()
@@ -232,11 +238,17 @@ def check_for_env_vars():
 
 
 def check_for_password():
+    """
+    Confirm the API key is stored in system keyring.
+    """
     password = keyring.get_password("Simplelogin", ACCT_EMAIL)
     return False if password is None else True
 
 
 def pre_check():
+    """
+    Checks for the necessary set up by the user.
+    """
     if not check_for_env_vars():
         print("Environmental variables are not correctly set")
         return False
