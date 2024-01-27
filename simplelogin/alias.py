@@ -11,12 +11,16 @@ from rich import print
 API_URL = os.environ.get("SIMPLELOGIN_API_URL")
 ACCT_EMAIL = os.environ.get("SIMPLELOGIN_EMAIL")
 API_KEY = keyring.get_password("Simplelogin", ACCT_EMAIL)
+HEADERS = {"Authentication": API_KEY}
 
 log = logging.getLogger("rich")
 
 
 def list_aliases(filter_flag):
-    headers = {"Authentication": API_KEY}
+    """
+    Generates a JSON of the user's aliases.
+    """
+    headers = HEADERS
     params = get_params(filter_flag)
     aliases = {"aliases": []}
     page_id = 0
@@ -52,6 +56,9 @@ def list_aliases(filter_flag):
 
 
 def get_params(filter_flag):
+    """
+    Sets the page and search filterm, if necessary.
+    """
     params = {"page_id": 0}
 
     match filter_flag:
@@ -66,6 +73,10 @@ def get_params(filter_flag):
 
 
 def generate_random_alias(mode, note):
+    """
+    Creates and returns a randomly generated alias.
+    """
+
     headers = {
         "Authentication": API_KEY,
         "Content-Type": "application/json",
@@ -87,8 +98,10 @@ def generate_random_alias(mode, note):
     return "Alias could not be created."
 
 
-# Keep getting 412 error because it's taking too long to create an alias¿
 def generate_custom_alias(prefix, note, name, suffix, mailbox_ids):
+    """
+    Creates and returns a user-defined alias.
+    """
     headers = {
         "Authentication": API_KEY,
         "Content-Type": "application/json",
@@ -123,7 +136,11 @@ def generate_custom_alias(prefix, note, name, suffix, mailbox_ids):
 
 # TODO Check that user is able to make new alias
 def get_suffixes():
-    headers = {"Authentication": API_KEY}
+    """
+    Returns the possible email suffixes generated for the new alias.
+    """
+
+    headers = HEADERS
     url = f"{API_URL}/api/v5/alias/options"
 
     try:
@@ -146,7 +163,11 @@ def get_suffixes():
 
 
 def get_mailboxes():
-    headers = {"Authentication": API_KEY}
+    """
+    Returns the user's mailboxes.
+    """
+
+    headers = HEADERS
     url = f"{API_URL}/api/v2/mailboxes"
 
     try:
@@ -167,7 +188,10 @@ def get_mailboxes():
 
 
 def delete_alias(alias_id):
-    headers = {"Authentication": API_KEY}
+    """
+    Deletes an alias.
+    """
+    headers = HEADERS
     url = f"{API_URL}/api/aliases/{alias_id}"
 
     try:
@@ -181,7 +205,11 @@ def delete_alias(alias_id):
 
 
 def get_alias(alias_id):
-    headers = {"Authentication": API_KEY}
+    """
+    Returns the alias based on ID.
+    """
+
+    headers = HEADERS
     url = f"{API_URL}/api/aliases/{alias_id}"
 
     try:
@@ -196,7 +224,11 @@ def get_alias(alias_id):
 
 
 def toggle_alias(alias_id):
-    headers = {"Authentication": API_KEY}
+    """
+    Disables/enables an alias, depending on its initial state.
+    """
+
+    headers = HEADERS
     url = f"{API_URL}/api/aliases/{alias_id}/toggle"
 
     try:

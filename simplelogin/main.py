@@ -242,7 +242,7 @@ def pre_check():
         return False
 
     if not check_for_password():
-        print("You are not logged in, try 'sl login'")
+        print("You are not logged in, try 'simplelogin login'")
         return False
 
     return True

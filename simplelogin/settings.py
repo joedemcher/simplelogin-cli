@@ -8,13 +8,17 @@ from rich import print
 API_URL = os.environ.get("SIMPLELOGIN_API_URL")
 ACCT_EMAIL = os.environ.get("SIMPLELOGIN_EMAIL")
 API_KEY = keyring.get_password("Simplelogin", ACCT_EMAIL)
+HEADERS = {"Authentication": API_KEY}
 
 log = logging.getLogger("rich")
 
 
 def get_alias_generation_mode():
+    """
+    Returns the user's pre-set generation mode
+    """
     try:
-        headers = {"Authentication": API_KEY}
+        headers = HEADERS
 
         response = requests.get(url=f"{API_URL}/api/setting", headers=headers)
 
@@ -28,7 +32,10 @@ def get_alias_generation_mode():
 
 
 def get_user_stats():
-    headers = {"Authentication": API_KEY}
+    """
+    Returns the number of owned aliases and the amount of mail received
+    """
+    headers = HEADERS
     url = f"{API_URL}/api/stats"
 
     try:
@@ -58,6 +65,9 @@ def get_user_stats():
 
 
 def login(email, password, device):
+    """
+    Begins the login process, calling for MFA if needed.
+    """
     payload = {"email": email, "password": password, "device": device}
 
     try:
@@ -84,6 +94,9 @@ def login(email, password, device):
 
 
 def mfa(email, mfa_token, mfa_key, device_name):
+    """
+    Handles the multi-factor authentification process.
+    """
     url = f"{API_URL}/api/auth/mfa"
     payload = {"mfa_token": mfa_token, "mfa_key": mfa_key, "device": device_name}
 
@@ -94,17 +107,20 @@ def mfa(email, mfa_token, mfa_key, device_name):
         return data.get("api_key")
     except requests.exceptions.RequestException as e:
         log.error(f"Request error: {e}")
-        print("User login failed")
+        print("User login failed during MFA")
         exit(1)
 
 
 def logout(ACCT_EMAIL):
+    """
+    Logs the user out of the service.
+    """
+
     # if force:
     #     keyring.delete_password("Simplelogin", ACCT_EMAIL)
 
     url = f"{API_URL}/api/logout"
-    API_KEY = keyring.get_password("Simplelogin", ACCT_EMAIL)
-    headers = {"Authentication": API_KEY}
+    headers = HEADERS
 
     try:
         response = requests.get(url, headers=headers)
