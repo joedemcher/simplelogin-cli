@@ -2,6 +2,15 @@
 
 A command line interface for Simplelogin.
 
+## Setup
+
+Two environmental variables must be set in your shell:
+  - `SIMPLELOGIN_API_URL`
+    - https://app.simplelogin.io or your domain.
+  - `SIMPLELOGIN_EMAIL`
+    - The email you use to sign in to Simplelogin.
+
+
 ## Capabilities
 
 - [x] Login to account (`login`)
@@ -16,11 +25,11 @@ A command line interface for Simplelogin.
 - [x] Disable/enable an alias (`toggle`)
 - [x] `--help` available for all commands
 - [x] Installable via `pip install simplelogin`
+- [x] API key stored securely in the system's [keyring](https://pypi.org/project/keyring/) service 🔑
 
 ## Todos
 
 - [ ] Bring down the required Python version (currently requires Python 3.12 for no good reason)
-- [ ] Consolidate `auth.py` into `settings.py` :construction:
 - [ ] Tests
 - [ ] Better commenting
 
