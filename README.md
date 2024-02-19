@@ -4,7 +4,9 @@ A command line interface for Simplelogin.
 
 ## Setup
 
-Two environmental variables must be set in your shell:
+1. Install the CLI with the following command: `pip install simplelogin`
+
+2. Set two environmental variables in your shell:
   - `SIMPLELOGIN_API_URL`
     - https://app.simplelogin.io or your domain.
   - `SIMPLELOGIN_EMAIL`
