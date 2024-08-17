@@ -5,7 +5,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "sl-cli/main.py",
+            "program": "simplelogin/main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": ["alias"]
