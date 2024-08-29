@@ -33,19 +33,18 @@ A command-line interface for Simplelogin.
 
 ## Capabilities
 
-- [x] **Login to account** (`login`)
-  - [x] Supports Multi-Factor Authentication (MFA)
-- [x] **Logout** (`logout`)
-- [x] **Search aliases** (`alias`)
-  - [x] Search using [flags](https://github.com/simple-login/app/blob/master/docs/api.md#get-apiv2aliases) (e.g., `alias --pinned`)
-- [x] **Get user stats** (`stats`)
-- [x] **Generate custom alias** (`create`)
-- [x] **Generate random alias** (`random`)
-- [x] **Delete an alias** (`delete`)
-- [x] **Disable/enable an alias** (`toggle`)
-- [x] **Help** (`--help`) available for all commands
-- [x] **Install via pip** (`pip install simplelogin`)
-- [x] **Secure API key storage** in the system's [keyring](https://pypi.org/project/keyring/) service 🔑
+- Login to account (`login`)
+  - Supports Multi-Factor Authentication (MFA)
+- Logout (`logout`)
+- Search aliases (`alias`)
+  - Search using [flags](https://github.com/simple-login/app/blob/master/docs/api.md#get-apiv2aliases) (e.g., `alias --pinned`)
+- Get user stats (`stats`)
+- Generate custom alias (`create`)
+- Generate random alias (`random`)
+- Delete an alias (`delete`)
+- Disable/enable an alias (`toggle`)
+- Help (`--help`) available for all commands
+- Secure API key storage in the system's [keyring](https://pypi.org/project/keyring/) service 🔑
 
 ## Todos
 
