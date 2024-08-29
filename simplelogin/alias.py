@@ -57,7 +57,7 @@ def list_aliases(filter_flag):
 
 def get_params(filter_flag):
     """
-    Sets the page and search filterm, if necessary.
+    Sets the page and search filter parameters, if necessary.
     """
     params = {"page_id": 0}
 
@@ -76,7 +76,6 @@ def generate_random_alias(mode, note):
     """
     Creates and returns a randomly generated alias.
     """
-
     headers = {
         "Authentication": API_KEY,
         "Content-Type": "application/json",
