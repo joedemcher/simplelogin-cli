@@ -49,7 +49,6 @@ def get_config_dir():
 
 
 def get_config_file():
-    # Also check for environment variable override
     env_config = os.environ.get('SIMPLELOGIN_CONFIG')
     if env_config:
         return Path(env_config)
@@ -131,7 +130,179 @@ def list_aliases(config):
     print(tabulate(table_data, headers=["ID", "Email", "Enabled", "Note"], tablefmt="grid"))
 
 
-# ... [other API functions remain the same as before] ...
+def create_alias(config, note=None, prefix=None, suffix=None, mailbox_id=None):
+    """Create a new alias"""
+    headers = get_headers(config)
+
+    data = {}
+    if note:
+        data['note'] = note
+    if prefix:
+        data['prefix'] = prefix
+    if suffix:
+        data['suffix'] = suffix
+    if mailbox_id:
+        data['mailbox_id'] = mailbox_id
+
+    response = requests.post(
+        f"{BASE_URL}aliases",
+        headers=headers,
+        json=data
+    )
+
+    if response.status_code != 201:
+        print(f"Error creating alias: {response.status_code} - {response.text}")
+        return
+
+    alias = response.json()
+    print(f"✓ Alias created: {alias['email']}")
+    if 'id' in alias:
+        print(f"  ID: {alias['id']}")
+    if note:
+        print(f"  Note: {note}")
+
+
+def toggle_alias(config, alias_id):
+    """Toggle an alias on/off"""
+    headers = get_headers(config)
+
+    response = requests.get(f"{BASE_URL}aliases/{alias_id}", headers=headers)
+
+    if response.status_code != 200:
+        print(f"Error: {response.status_code} - {response.text}")
+        return
+
+    alias = response.json()
+    current_status = alias['enabled']
+
+    response = requests.post(
+        f"{BASE_URL}aliases/{alias_id}/toggle",
+        headers=headers
+    )
+
+    if response.status_code != 200:
+        print(f"Error toggling alias: {response.status_code} - {response.text}")
+        return
+
+    new_status = "enabled" if not current_status else "disabled"
+    print(f"✓ Alias {alias['email']} is now {new_status}")
+
+
+def delete_alias(config, alias_id):
+    """Delete an alias"""
+    headers = get_headers(config)
+
+    response = requests.get(f"{BASE_URL}aliases/{alias_id}", headers=headers)
+
+    if response.status_code != 200:
+        print(f"Error: {response.status_code} - {response.text}")
+        return
+
+    alias_email = response.json()['email']
+
+    confirm = input(f"Are you sure you want to delete {alias_email}? (y/n): ")
+    if confirm.lower() != 'y':
+        print("Deletion cancelled.")
+        return
+
+    response = requests.delete(
+        f"{BASE_URL}aliases/{alias_id}",
+        headers=headers
+    )
+
+    if response.status_code != 200:
+        print(f"Error deleting alias: {response.status_code} - {response.text}")
+        return
+
+    print(f"✓ Alias {alias_email} deleted successfully")
+
+
+def alias_info(config, alias_id):
+    """Show detailed information about an alias"""
+    headers = get_headers(config)
+    response = requests.get(f"{BASE_URL}aliases/{alias_id}", headers=headers)
+
+    if response.status_code != 200:
+        print(f"Error: {response.status_code} - {response.text}")
+        return
+
+    alias = response.json()
+
+    print(f"Alias: {alias['email']}")
+    print(f"ID: {alias['id']}")
+    print(f"Creation date: {alias.get('creation_date', 'N/A')}")
+    print(f"Enabled: {'Yes' if alias['enabled'] else 'No'}")
+
+    if 'note' in alias and alias['note']:
+        print(f"Note: {alias['note']}")
+
+    if 'mailbox' in alias:
+        print(f"Mailbox: {alias['mailbox']['email']}")
+
+    if 'nb_forward' in alias:
+        print(f"Forwarded emails: {alias['nb_forward']}")
+
+    if 'nb_reply' in alias:
+        print(f"Reply emails: {alias['nb_reply']}")
+
+    if 'nb_block' in alias:
+        print(f"Blocked emails: {alias['nb_block']}")
+
+
+def list_domains(config):
+    """List all domains"""
+    headers = get_headers(config)
+    response = requests.get(f"{BASE_URL}domains", headers=headers)
+
+    if response.status_code != 200:
+        print(f"Error: {response.status_code} - {response.text}")
+        return
+
+    domains = response.json()['domains']
+
+    if not domains:
+        print("No domains found.")
+        return
+
+    table_data = []
+    for domain in domains:
+        table_data.append([
+            domain['id'],
+            domain['domain'],
+            domain.get('creation_date', 'N/A'),
+            domain.get('nb_alias', 0)
+        ])
+
+    print(tabulate(table_data, headers=["ID", "Domain", "Creation Date", "# Aliases"], tablefmt="grid"))
+
+
+def list_mailboxes(config):
+    """List all mailboxes"""
+    headers = get_headers(config)
+    response = requests.get(f"{BASE_URL}mailboxes", headers=headers)
+
+    if response.status_code != 200:
+        print(f"Error: {response.status_code} - {response.text}")
+        return
+
+    mailboxes = response.json()['mailboxes']
+
+    if not mailboxes:
+        print("No mailboxes found.")
+        return
+
+    table_data = []
+    for mailbox in mailboxes:
+        default_status = "✓" if mailbox.get('default', False) else ""
+        table_data.append([
+            mailbox['id'],
+            mailbox['email'],
+            default_status,
+            mailbox.get('creation_date', 'N/A')
+        ])
+
+    print(tabulate(table_data, headers=["ID", "Email", "Default", "Creation Date"], tablefmt="grid"))
+
 
 def set_api_key(config, key):
     """Set the API key in the config file"""
@@ -142,13 +313,11 @@ def set_api_key(config, key):
 
 def view_config(config):
     """View the current configuration"""
-    # Check environment variable first
     env_api_key = os.environ.get('SIMPLELOGIN_API_KEY')
 
     print("Current configuration:")
 
     if env_api_key:
-        # Only show first 4 and last 4 characters of the API key
         masked_key = env_api_key[:4] + '*' * (len(env_api_key) - 8) + env_api_key[-4:]
         print(f"API Key (from environment): {masked_key}")
     elif config.get('api_key'):
@@ -171,7 +340,6 @@ def main():
 
     config = load_config()
 
-    # Handle configuration commands
     if args['config']:
         if args['set-key']:
             set_api_key(config, args['<api_key>'])
@@ -179,6 +347,39 @@ def main():
         elif args['view']:
             view_config(config)
             return
+
+    if args['aliases']:
+        if args['list']:
+            list_aliases(config)
+            return
+        elif args['create']:
+            create_alias(
+                config,
+                note=args['--note'],
+                prefix=args['--prefix'],
+                suffix=args['--suffix'],
+                mailbox_id=args['--mailbox']
+            )
+            return
+        elif args['toggle']:
+            toggle_alias(config, args['<alias_id>'])
+            return
+        elif args['delete']:
+            delete_alias(config, args['<alias_id>'])
+            return
+        elif args['info']:
+            alias_info(config, args['<alias_id>'])
+            return
+
+    elif args['domains'] and args['list']:
+        list_domains(config)
+        return
+
+    elif args['mailboxes'] and args['list']:
+        list_mailboxes(config)
+        return
+
+    print("Command not recognized. Use --help to see available commands.")
 
 
 if __name__ == "__main__":
