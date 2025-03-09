@@ -2,6 +2,8 @@
 
 A command-line interface for managing your [SimpleLogin](https://simplelogin.io/) email aliases and custom domains.
 
+> Disclaimer: This tool is not officially associated with or endorsed by SimpleLogin. It is an independent, community-developed project that interacts with the SimpleLogin API.
+
 ## Overview
 
 SimpleLogin CLI provides a convenient way to manage your SimpleLogin email aliases directly from your terminal. With this tool, you can:
