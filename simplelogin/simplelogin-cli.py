@@ -35,8 +35,6 @@ Options:
 
 import os
 import sys
-import json
-from random import choices
 
 import requests
 import yaml
@@ -46,7 +44,7 @@ from pathlib import Path
 from datetime import datetime
 import questionary as q
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 # API Configuration
 BASE_URL = 'https://app.simplelogin.io'
