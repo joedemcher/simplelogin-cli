@@ -22,7 +22,7 @@ SimpleLogin CLI provides a convenient way to manage your SimpleLogin email alias
 ### Install via pip
 
 ```bash
-pip install simplelogin-cli
+pip install simplelogin
 ```
 
 ### Manual Installation
@@ -73,78 +73,78 @@ simplelogin-cli config view
 
 ```bash
 # List all aliases
-simplelogin-cli aliases list
+simplelogin aliases list
 
 # Paginate through aliases
-simplelogin-cli aliases list --page=1
+simplelogin aliases list --page=1
 
 # Show only enabled aliases
-simplelogin-cli aliases list --enabled
+simplelogin aliases list --enabled
 
 # Show only disabled aliases
-simplelogin-cli aliases list --disabled
+simplelogin aliases list --disabled
 
 # Show only pinned aliases
-simplelogin-cli aliases list --pinned
+simplelogin aliases list --pinned
 
 # Search aliases
-simplelogin-cli aliases list --query="github"
+simplelogin aliases list --query="github"
 ```
 
 #### Create aliases
 
 ```bash
 # Create a custom alias
-simplelogin-cli aliases create custom github
+simplelogin aliases create custom github
 # You'll be prompted to select a suffix and mailbox
 
 # Create a custom alias with options
-simplelogin-cli aliases create custom github --note="For GitHub notifications" --name="GitHub"
+simplelogin aliases create custom github --note="For GitHub notifications" --name="GitHub"
 
 # Create a random alias
-simplelogin-cli aliases create random
+simplelogin aliases create random
 
 # Create a random alias with word mode
-simplelogin-cli aliases create random --mode=word
+simplelogin aliases create random --mode=word
 
 # Create a random alias with a note
-simplelogin-cli aliases create random --note="For newsletter signups"
+simplelogin aliases create random --note="For newsletter signups"
 ```
 
 #### Manage existing aliases
 
 ```bash
 # Toggle an alias (enable/disable)
-simplelogin-cli aliases toggle 123
+simplelogin aliases toggle 123
 
 # Delete an alias
-simplelogin-cli aliases delete 123
+simplelogin aliases delete 123
 
 # View detailed information about an alias
-simplelogin-cli aliases info 123
+simplelogin aliases info 123
 ```
 
 ### Managing Custom Domains
 
 ```bash
 # List all custom domains
-simplelogin-cli domains list
+simplelogin domains list
 
 # View domain details
-simplelogin-cli domains info 42
+simplelogin domains info 42
 
 # Update domain settings
-simplelogin-cli domains update 42 --catch-all=true --random-prefix=true
+simplelogin domains update 42 --catch-all=true --random-prefix=true
 
 # View deleted aliases for a domain
-simplelogin-cli domains trash 42
+simplelogin domains trash 42
 ```
 
 ### Managing Mailboxes
 
 ```bash
 # List all mailboxes
-simplelogin-cli mailboxes list
+simplelogin mailboxes list
 ```
 
 ## Advanced Usage
@@ -154,7 +154,7 @@ simplelogin-cli mailboxes list
 When creating a custom alias, you can specify which mailboxes should receive emails:
 
 ```bash
-simplelogin-cli aliases create custom github --mailboxes=1,2,3
+simplelogin aliases create custom github --mailboxes=1,2,3
 ```
 
 If you don't specify mailboxes, you'll be prompted to select them interactively.

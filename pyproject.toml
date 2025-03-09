@@ -1,11 +1,11 @@
 [project]
-name = "simplelogin-cli"
-version = "0.2.0"
-description = "A command-line interface for managing your [SimpleLogin](https://simplelogin.io/) email aliases and custom domains."
-authors = ["Joseph Demcher <git@joedem.ch>"]
+name = "simplelogin"
+version = "0.2.1"
+description = "A command-line interface for managing your SimpleLogin email aliases and custom domains."
+authors = [{ name="Joseph Demcher", email="git@joedem.ch"}]
 readme = "README.md"
 license = "MIT"
-license-files = ["LICEN[CS]E*"]
+license-files = ["LICENSE.md"]
 dependencies = [
     "requests>=2.25.0",
     "docopt>=0.6.2",
@@ -23,3 +23,6 @@ Documentation = "https://github.com/joedemcher/simplelogin-cli/README.md"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["simplelogin"]
