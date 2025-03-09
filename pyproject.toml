@@ -1,0 +1,25 @@
+[project]
+name = "simplelogin-cli"
+version = "0.2.0"
+description = "A command-line interface for managing your [SimpleLogin](https://simplelogin.io/) email aliases and custom domains."
+authors = ["Joseph Demcher <git@joedem.ch>"]
+readme = "README.md"
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+dependencies = [
+    "requests>=2.25.0",
+    "docopt>=0.6.2",
+    "tabulate>=0.8.9",
+    "pyyaml>=5.4.0",
+    "questionary>=1.10.0",
+]
+keywords = ["email", "aliases", "simplelogin", "cli", "privacy"]
+
+[project.urls]
+Homepage = "https://github.com/joedemcher/simplelogin-cli"
+Issues = "https://github.com/joedemcher/simplelogin-cli/issues"
+Documentation = "https://github.com/joedemcher/simplelogin-cli/README.md"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
