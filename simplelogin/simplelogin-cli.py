@@ -4,7 +4,8 @@ SimpleLogin CLI - A command line tool for managing SimpleLogin email aliases
 
 Usage:
     simplelogin-cli aliases list [--page=<page>] [--pinned] [--disabled] [--enabled] [--query=<query>]
-    simplelogin-cli aliases create [--note=<note>] [--prefix=<prefix>] [--suffix=<suffix>] [--mailbox=<mailbox_id>]
+    simplelogin-cli aliases create custom <prefix> [--mailboxes=<ids>] [--note=<note>] [--name=<name>]
+    simplelogin-cli aliases create random [--mode=<mode>] [--note=<note>]
     simplelogin-cli aliases toggle <alias_id>
     simplelogin-cli aliases delete <alias_id>
     simplelogin-cli aliases info <alias_id>
@@ -24,30 +25,33 @@ Options:
     --disabled                   Show only disabled aliases
     --enabled                    Show only enabled aliases
     --query=<query>              Search aliases
+    --name=<name>                Set a name for the alias or domain
+    --mode=<mode>                Random alias mode (uuid or word)
     --note=<note>                Add a note to the alias
     --prefix=<prefix>            Set custom prefix for the alias
     --suffix=<suffix>            Set custom suffix for the alias
-    --mailbox=<mailbox_id>       Set specific mailbox ID for the alias
     --catch-all=<bool>           Enable/disable catch-all for domain (true/false)
     --random-prefix=<bool>       Enable/disable random prefix generation (true/false)
-    --name=<name>                Set a name for the domain
     --mailboxes=<ids>            Comma-separated list of mailbox IDs
 """
 
 import os
 import sys
 import json
+from random import choices
+
 import requests
 import yaml
 from docopt import docopt
 from tabulate import tabulate
 from pathlib import Path
 from datetime import datetime
+import questionary as q
 
 __version__ = '0.1.0'
 
 # API Configuration
-BASE_URL = 'https://app.simplelogin.io/api/'
+BASE_URL = 'https://app.simplelogin.io'
 
 
 # Configuration setup following XDG Base Directory Specification
@@ -160,7 +164,7 @@ def list_aliases(config, page=0, pinned=False, disabled=False, enabled=False, qu
     data = {'query': query} if query else None
 
     response = requests.get(
-        f"{BASE_URL}v2/aliases",
+        f"{BASE_URL}/api/v2/aliases",
         headers=headers,
         params=params,
         json=data
@@ -178,7 +182,7 @@ def list_aliases(config, page=0, pinned=False, disabled=False, enabled=False, qu
 
     table_data = []
     for alias in aliases:
-        enabled_status = "✓" if alias['enabled'] else "✗"
+        enabled_status = "✓" if alias['enabled'] else "❌"
         pinned_status = "📌" if alias.get('pinned', False) else ""
 
         # Format latest activity
@@ -211,22 +215,76 @@ def list_aliases(config, page=0, pinned=False, disabled=False, enabled=False, qu
         print(f"\nShowing page {page}. Use --page to see more results.")
 
 
-def create_alias(config, note=None, prefix=None, suffix=None, mailbox_id=None):
-    """Create a new alias"""
+def get_alias_options(config):
+    """Get available options for creating new aliases"""
     headers = get_headers(config)
+    params = {}
+    # if hostname:
+    #     params['hostname'] = hostname
 
-    data = {}
+    response = requests.get(
+        f"{BASE_URL}/api/v5/alias/options",
+        headers=headers,
+        params=params
+    )
+
+    if response.status_code != 200:
+        print(f"Error: {response.status_code} - {response.text}")
+        return None
+
+    return response.json()
+
+
+def create_custom_alias(config, prefix, suffix_id=None, mailbox_ids=None, note=None, name=None):
+    """
+    Create a new custom alias
+
+    Args:
+        config: Configuration dictionary
+        prefix: Alias prefix
+        mailbox_ids: List of mailbox IDs
+        note: Optional note
+        name: Optional name
+    """
+    # First get available options
+    options = get_alias_options(config)
+    if not options:
+        return
+
+    if not options['can_create']:
+        print("You cannot create new aliases at this time.")
+        return
+
+    suffixes = options['suffixes']
+
+    # if suffix_id >= len(suffixes):
+    #     print(f"Invalid suffix ID. Available suffixes:")
+    #     for i, suffix in enumerate(options['suffixes']):
+    #         print(f"[{i}] {suffix['suffix']} {'(Premium)' if suffix['is_premium'] else ''}")
+    #     return
+
+    suffix_ids = {}
+
+    for suffix in suffixes:
+        suffix_ids[suffix['suffix']] = suffix['signed_suffix']
+
+    suffix_key = q.select(
+        "Select your email suffix",
+        choices=[key for key in suffix_ids.keys()],
+    ).ask()
+
+    headers = get_headers(config)
+    data = {'alias_prefix': prefix, 'signed_suffix': suffix_ids.get(suffix_key), 'mailbox_ids': mailbox_ids}
+
     if note:
         data['note'] = note
-    if prefix:
-        data['prefix'] = prefix
-    if suffix:
-        data['suffix'] = suffix
-    if mailbox_id:
-        data['mailbox_id'] = mailbox_id
+    if name:
+        data['name'] = name
+
+    # params = {'hostname': hostname} if hostname else {}
 
     response = requests.post(
-        f"{BASE_URL}aliases",
+        f"{BASE_URL}/api/v3/alias/custom/new",
         headers=headers,
         json=data
     )
@@ -236,9 +294,52 @@ def create_alias(config, note=None, prefix=None, suffix=None, mailbox_id=None):
         return
 
     alias = response.json()
-    print(f"✓ Alias created: {alias['email']}")
-    if 'id' in alias:
-        print(f"  ID: {alias['id']}")
+    print(f"✓ Custom alias created: {alias['email']}")
+    print(f"  ID: {alias['id']}")
+    if note:
+        print(f"  Note: {note}")
+    if name:
+        print(f"  Name: {name}")
+
+
+def create_random_alias(config, mode=None, note=None, hostname=None):
+    """
+    Create a new random alias
+
+    Args:
+        config: Configuration dictionary
+        mode: Either 'uuid' or 'word' (optional)
+        note: Optional note
+        hostname: Optional hostname
+    """
+    headers = get_headers(config)
+    params = {}
+    if mode:
+        if mode not in ('uuid', 'word'):
+            print("Mode must be either 'uuid' or 'word'")
+            return
+        params['mode'] = mode
+    # if hostname:
+    #     params['hostname'] = hostname
+
+    data = {}
+    if note:
+        data['note'] = note
+
+    response = requests.post(
+        f"{BASE_URL}/api/alias/random/new",
+        headers=headers,
+        json=data,
+        params=params
+    )
+
+    if response.status_code != 201:
+        print(f"Error creating alias: {response.status_code} - {response.text}")
+        return
+
+    alias = response.json()
+    print(f"✓ Random alias created: {alias['email']}")
+    print(f"  ID: {alias['id']}")
     if note:
         print(f"  Note: {note}")
 
@@ -248,7 +349,7 @@ def toggle_alias(config, alias_id):
     headers = get_headers(config)
 
     # First, get current status
-    response = requests.get(f"{BASE_URL}aliases/{alias_id}", headers=headers)
+    response = requests.get(f"{BASE_URL}/api/aliases/{alias_id}", headers=headers)
 
     if response.status_code != 200:
         print(f"Error: {response.status_code} - {response.text}")
@@ -259,7 +360,7 @@ def toggle_alias(config, alias_id):
 
     # Now toggle
     response = requests.post(
-        f"{BASE_URL}aliases/{alias_id}/toggle",
+        f"{BASE_URL}/api/aliases/{alias_id}/toggle",
         headers=headers
     )
 
@@ -276,7 +377,7 @@ def delete_alias(config, alias_id):
     headers = get_headers(config)
 
     # First, get the alias to show what we're deleting
-    response = requests.get(f"{BASE_URL}aliases/{alias_id}", headers=headers)
+    response = requests.get(f"{BASE_URL}/api/aliases/{alias_id}", headers=headers)
 
     if response.status_code != 200:
         print(f"Error: {response.status_code} - {response.text}")
@@ -292,7 +393,7 @@ def delete_alias(config, alias_id):
 
     # Now delete
     response = requests.delete(
-        f"{BASE_URL}aliases/{alias_id}",
+        f"{BASE_URL}/api/aliases/{alias_id}",
         headers=headers
     )
 
@@ -306,7 +407,7 @@ def delete_alias(config, alias_id):
 def alias_info(config, alias_id):
     """Show detailed information about an alias"""
     headers = get_headers(config)
-    response = requests.get(f"{BASE_URL}aliases/{alias_id}", headers=headers)
+    response = requests.get(f"{BASE_URL}/api/aliases/{alias_id}", headers=headers)
 
     if response.status_code != 200:
         print(f"Error: {response.status_code} - {response.text}")
@@ -334,11 +435,15 @@ def alias_info(config, alias_id):
     if 'nb_block' in alias:
         print(f"Blocked emails: {alias['nb_block']}")
 
+def select_suffix(config):
+    """Select suffix for new alias"""
+    headers = get_headers(config)
+
 
 def list_domains(config):
     """List all custom domains"""
     headers = get_headers(config)
-    response = requests.get(f"{BASE_URL}custom_domains", headers=headers)
+    response = requests.get(f"{BASE_URL}/api/custom_domains", headers=headers)
 
     if response.status_code != 200:
         print(f"Error: {response.status_code} - {response.text}")
@@ -371,7 +476,7 @@ def domain_info(config, domain_id):
     headers = get_headers(config)
     # Note: There's no specific endpoint for getting a single domain by ID,
     # so we'll get all domains and filter for the one we want
-    response = requests.get(f"{BASE_URL}custom_domains", headers=headers)
+    response = requests.get(f"{BASE_URL}/api/custom_domains", headers=headers)
 
     if response.status_code != 200:
         print(f"Error: {response.status_code} - {response.text}")
@@ -425,7 +530,7 @@ def update_domain(config, domain_id, catch_all=None, random_prefix=None, name=No
         return
 
     response = requests.patch(
-        f"{BASE_URL}custom_domains/{domain_id}",
+        f"{BASE_URL}/api/custom_domains/{domain_id}",
         headers=headers,
         json=data
     )
@@ -442,7 +547,7 @@ def update_domain(config, domain_id, catch_all=None, random_prefix=None, name=No
 def domain_trash(config, domain_id):
     """Show deleted aliases for a custom domain"""
     headers = get_headers(config)
-    response = requests.get(f"{BASE_URL}custom_domains/{domain_id}/trash", headers=headers)
+    response = requests.get(f"{BASE_URL}/api/custom_domains/{domain_id}/trash", headers=headers)
 
     if response.status_code != 200:
         print(f"Error: {response.status_code} - {response.text}")
@@ -468,22 +573,50 @@ def domain_trash(config, domain_id):
 
     print(tabulate(table_data, headers=["Alias", "Deleted At"], tablefmt="grid"))
 
-
-def list_mailboxes(config):
-    """List all mailboxes"""
+def get_mailboxes(config):
     headers = get_headers(config)
-    response = requests.get(f"{BASE_URL}mailboxes", headers=headers)
+    response = requests.get(f"{BASE_URL}/api/v2/mailboxes", headers=headers)
 
     if response.status_code != 200:
         print(f"Error: {response.status_code} - {response.text}")
         return
 
-    mailboxes = response.json()['mailboxes']
+    mailboxes = response.json()["mailboxes"]
 
-    if not mailboxes:
+    if mailboxes:
+        return mailboxes
+    else:
         print("No mailboxes found.")
         return
 
+def select_mailboxes(config):
+    """
+    Prompts the user to choose their mailbox(es) for alias generation.
+    """
+    mailboxes = get_mailboxes(config)
+    mailbox_ids = {}
+
+    for mailbox in mailboxes:
+        mailbox_ids[mailbox["email"]] = mailbox["id"]
+
+    while True:
+        selected_mailboxes = q.checkbox(
+            "Select mailbox(es)", choices=[mailbox for mailbox in mailbox_ids.keys()]
+        ).ask()
+
+        if len(selected_mailboxes) != 0:
+            break
+
+        print("Please select at least one mailbox")
+
+    selected_mailbox_ids = []
+    for box in selected_mailboxes:
+        selected_mailbox_ids.append(mailbox_ids[box])
+    return selected_mailbox_ids
+
+def list_mailboxes(config):
+    """List all mailboxes"""
+    mailboxes = get_mailboxes(config)
     table_data = []
     for mailbox in mailboxes:
         default_status = "✓" if mailbox.get('default', False) else ""
@@ -557,13 +690,27 @@ def main():
             )
             return
         elif args['create']:
-            create_alias(
-                config,
-                note=args['--note'],
-                prefix=args['--prefix'],
-                suffix=args['--suffix'],
-                mailbox_id=args['--mailbox']
-            )
+            if args['custom']:
+                prefix = args['<prefix>']
+                if args['--mailboxes']:
+                    mailbox_ids = [int(id.strip()) for id in args['--mailboxes'].split(',')]
+                else:
+                    mailbox_ids = select_mailboxes(config)
+                create_custom_alias(
+                    config,
+                    prefix,
+                    mailbox_ids=mailbox_ids,
+                    note=args['--note'],
+                    name=args['--name'],
+                    # hostname=args['--hostname']
+                )
+            elif args['random']:
+                create_random_alias(
+                    config,
+                    mode=args['--mode'],
+                    note=args['--note']
+                    # hostname=args['--hostname']
+                )
             return
         elif args['toggle']:
             toggle_alias(config, args['<alias_id>'])
