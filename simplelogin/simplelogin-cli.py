@@ -28,8 +28,6 @@ Options:
     --name=<name>                Set a name for the alias or domain
     --mode=<mode>                Random alias mode (uuid or word)
     --note=<note>                Add a note to the alias
-    --prefix=<prefix>            Set custom prefix for the alias
-    --suffix=<suffix>            Set custom suffix for the alias
     --catch-all=<bool>           Enable/disable catch-all for domain (true/false)
     --random-prefix=<bool>       Enable/disable random prefix generation (true/false)
     --mailboxes=<ids>            Comma-separated list of mailbox IDs
@@ -449,7 +447,7 @@ def list_domains(config):
         print(f"Error: {response.status_code} - {response.text}")
         return
 
-    domains = response.json()
+    domains = response.json()['custom_domains']
 
     if not domains:
         print("No custom domains found.")
@@ -482,7 +480,7 @@ def domain_info(config, domain_id):
         print(f"Error: {response.status_code} - {response.text}")
         return
 
-    domains = response.json()
+    domains = response.json()['custom_domains']
     domain = next((d for d in domains if str(d['id']) == domain_id), None)
 
     if not domain:
