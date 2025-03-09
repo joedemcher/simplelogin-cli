@@ -52,7 +52,6 @@ __version__ = '0.1.0'
 BASE_URL = 'https://app.simplelogin.io'
 
 
-# Configuration setup following XDG Base Directory Specification
 def get_config_dir():
     """Get the configuration directory following XDG standards"""
     xdg_config_home = os.environ.get('XDG_CONFIG_HOME')
@@ -61,14 +60,12 @@ def get_config_dir():
     else:
         config_dir = Path.home() / '.config' / 'simplelogin'
 
-    # Create directory if it doesn't exist
     config_dir.mkdir(parents=True, exist_ok=True)
     return config_dir
 
 
 def get_config_file():
     """Get the path to the configuration file"""
-    # Also check for environment variable override
     env_config = os.environ.get('SIMPLELOGIN_CONFIG')
     if env_config:
         return Path(env_config)
@@ -80,7 +77,6 @@ def load_config():
     """Load configuration from file"""
     config_file = get_config_file()
 
-    # Check if config file exists, create it if not
     if not config_file.exists():
         default_config = {'api_key': ''}
         with open(config_file, 'w') as f:
@@ -89,7 +85,6 @@ def load_config():
         print("Please set your API key with: simplelogin-cli config set-key <api_key>")
         sys.exit(0)
 
-    # Load configuration
     with open(config_file, 'r') as f:
         try:
             return yaml.safe_load(f) or {}
@@ -107,10 +102,8 @@ def save_config(config):
 
 def get_headers(config):
     """Get API headers with authentication"""
-    # First check environment variable for API key
     api_key = os.environ.get('SIMPLELOGIN_API_KEY')
 
-    # If not in environment, use config file
     if not api_key:
         api_key = config.get('api_key', '')
 
@@ -120,17 +113,24 @@ def get_headers(config):
         sys.exit(1)
 
     return {
-        'Authentication': api_key,
+        'Authentication': f"{api_key}",
         'Content-Type': 'application/json'
     }
 
 
 def format_datetime(timestamp_str):
     """Format datetime string to a more readable format"""
+    if not timestamp_str:
+        return "N/A"
+
     try:
-        dt = datetime.fromisoformat(timestamp_str.replace('+00:00', '+0000'))
-        return dt.strftime('%Y-%m-%d %H:%M:%S')
-    except:
+        if isinstance(timestamp_str, str):
+            dt = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00').replace('+00:00', '+0000'))
+            return dt.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(timestamp_str, (int, float)):
+            dt = datetime.fromtimestamp(timestamp_str)
+            return dt.strftime('%Y-%m-%d %H:%M:%S')
+    except Exception as e:
         return timestamp_str
 
 
@@ -150,7 +150,6 @@ def list_aliases(config, page=0, pinned=False, disabled=False, enabled=False, qu
     headers = get_headers(config)
     params = {'page_id': page}
 
-    # Add filters (only one can be active)
     if pinned:
         params['pinned'] = True
     elif disabled:
@@ -158,82 +157,96 @@ def list_aliases(config, page=0, pinned=False, disabled=False, enabled=False, qu
     elif enabled:
         params['enabled'] = True
 
-    # Add search query if provided
     data = {'query': query} if query else None
 
-    response = requests.get(
-        f"{BASE_URL}/api/v2/aliases",
-        headers=headers,
-        params=params,
-        json=data
-    )
+    try:
+        response = requests.get(
+            f"{BASE_URL}/api/v2/aliases",
+            headers=headers,
+            params=params,
+            json=data,
+            timeout=10
+        )
 
-    if response.status_code != 200:
-        print(f"Error: {response.status_code} - {response.text}")
-        return
+        response.raise_for_status()
 
-    aliases = response.json()['aliases']
+        aliases = response.json()['aliases']
 
-    if not aliases:
-        print("No aliases found.")
-        return
+        if not aliases:
+            print("No aliases found.")
+            return
 
-    table_data = []
-    for alias in aliases:
-        enabled_status = "✓" if alias['enabled'] else "❌"
-        pinned_status = "📌" if alias.get('pinned', False) else ""
+        table_data = []
+        for alias in aliases:
+            enabled_status = "✓" if alias['enabled'] else "❌"
+            pinned_status = "📌" if alias.get('pinned', False) else ""
 
-        # Format latest activity
-        latest = alias.get('latest_activity', {})
-        activity = f"{latest.get('action', 'N/A')} ({format_datetime(str(latest.get('timestamp', '')))}" if latest else "N/A"
+            latest = alias.get('latest_activity', {})
+            activity = f"{latest.get('action', 'N/A')} ({format_datetime(latest.get('timestamp', ''))})" if latest else "N/A"
 
-        # Get primary mailbox
-        mailbox = alias['mailboxes'][0]['email'] if alias.get('mailboxes') else 'N/A'
+            mailbox = alias['mailboxes'][0]['email'] if alias.get('mailboxes') else 'N/A'
 
-        table_data.append([
-            alias['id'],
-            alias['email'],
-            alias.get('name', ''),
-            enabled_status,
-            pinned_status,
-            mailbox,
-            activity,
-            f"F:{alias.get('nb_forward', 0)} R:{alias.get('nb_reply', 0)} B:{alias.get('nb_block', 0)}",
-            alias.get('note', '')
-        ])
+            table_data.append([
+                alias['id'],
+                alias['email'],
+                alias.get('name', ''),
+                enabled_status,
+                pinned_status,
+                mailbox,
+                activity,
+                f"F:{alias.get('nb_forward', 0)} R:{alias.get('nb_reply', 0)} B:{alias.get('nb_block', 0)}",
+                alias.get('note', '')
+            ])
 
-    print(tabulate(
-        table_data,
-        headers=["ID", "Email", "Name", "Enabled", "Pinned", "Mailbox", "Latest Activity", "Stats", "Note"],
-        tablefmt="grid"
-    ))
+        print(tabulate(
+            table_data,
+            headers=["ID", "Email", "Name", "Enabled", "Pinned", "Mailbox", "Latest Activity", "Stats", "Note"],
+            tablefmt="grid"
+        ))
 
-    # Indicate if there might be more pages
-    if len(aliases) == 20:
-        print(f"\nShowing page {page}. Use --page to see more results.")
+        if len(aliases) == 20:
+            print(f"\nShowing page {page}. Use --page to see more results.")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error connecting to SimpleLogin API: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
 
 
 def get_alias_options(config):
     """Get available options for creating new aliases"""
     headers = get_headers(config)
     params = {}
-    # if hostname:
-    #     params['hostname'] = hostname
 
-    response = requests.get(
-        f"{BASE_URL}/api/v5/alias/options",
-        headers=headers,
-        params=params
-    )
+    try:
+        response = requests.get(
+            f"{BASE_URL}/api/v5/alias/options",
+            headers=headers,
+            params=params,
+            timeout=10
+        )
 
-    if response.status_code != 200:
-        print(f"Error: {response.status_code} - {response.text}")
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting alias options: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
         return None
 
-    return response.json()
 
-
-def create_custom_alias(config, prefix, suffix_id=None, mailbox_ids=None, note=None, name=None):
+def create_custom_alias(config, prefix, mailbox_ids=None, note=None, name=None):
     """
     Create a new custom alias
 
@@ -244,7 +257,6 @@ def create_custom_alias(config, prefix, suffix_id=None, mailbox_ids=None, note=N
         note: Optional note
         name: Optional name
     """
-    # First get available options
     options = get_alias_options(config)
     if not options:
         return
@@ -254,17 +266,14 @@ def create_custom_alias(config, prefix, suffix_id=None, mailbox_ids=None, note=N
         return
 
     suffixes = options['suffixes']
-
-    # if suffix_id >= len(suffixes):
-    #     print(f"Invalid suffix ID. Available suffixes:")
-    #     for i, suffix in enumerate(options['suffixes']):
-    #         print(f"[{i}] {suffix['suffix']} {'(Premium)' if suffix['is_premium'] else ''}")
-    #     return
-
     suffix_ids = {}
 
     for suffix in suffixes:
         suffix_ids[suffix['suffix']] = suffix['signed_suffix']
+
+    if not suffix_ids:
+        print("No available suffixes found.")
+        return
 
     suffix_key = q.select(
         "Select your email suffix",
@@ -272,35 +281,46 @@ def create_custom_alias(config, prefix, suffix_id=None, mailbox_ids=None, note=N
     ).ask()
 
     headers = get_headers(config)
-    data = {'alias_prefix': prefix, 'signed_suffix': suffix_ids.get(suffix_key), 'mailbox_ids': mailbox_ids}
+    data = {'alias_prefix': prefix, 'signed_suffix': suffix_ids.get(suffix_key)}
+
+    if mailbox_ids:
+        data['mailbox_ids'] = mailbox_ids
 
     if note:
         data['note'] = note
     if name:
         data['name'] = name
 
-    # params = {'hostname': hostname} if hostname else {}
+    try:
+        response = requests.post(
+            f"{BASE_URL}/api/v3/alias/custom/new",
+            headers=headers,
+            json=data,
+            timeout=10
+        )
 
-    response = requests.post(
-        f"{BASE_URL}/api/v3/alias/custom/new",
-        headers=headers,
-        json=data
-    )
+        response.raise_for_status()
 
-    if response.status_code != 201:
-        print(f"Error creating alias: {response.status_code} - {response.text}")
-        return
+        alias = response.json()
+        print(f"✓ Custom alias created: {alias['email']}")
+        print(f"  ID: {alias['id']}")
+        if note:
+            print(f"  Note: {note}")
+        if name:
+            print(f"  Name: {name}")
 
-    alias = response.json()
-    print(f"✓ Custom alias created: {alias['email']}")
-    print(f"  ID: {alias['id']}")
-    if note:
-        print(f"  Note: {note}")
-    if name:
-        print(f"  Name: {name}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error creating alias: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
 
 
-def create_random_alias(config, mode=None, note=None, hostname=None):
+def create_random_alias(config, mode=None, note=None):
     """
     Create a new random alias
 
@@ -308,7 +328,6 @@ def create_random_alias(config, mode=None, note=None, hostname=None):
         config: Configuration dictionary
         mode: Either 'uuid' or 'word' (optional)
         note: Optional note
-        hostname: Optional hostname
     """
     headers = get_headers(config)
     params = {}
@@ -317,191 +336,254 @@ def create_random_alias(config, mode=None, note=None, hostname=None):
             print("Mode must be either 'uuid' or 'word'")
             return
         params['mode'] = mode
-    # if hostname:
-    #     params['hostname'] = hostname
 
     data = {}
     if note:
         data['note'] = note
 
-    response = requests.post(
-        f"{BASE_URL}/api/alias/random/new",
-        headers=headers,
-        json=data,
-        params=params
-    )
+    try:
+        response = requests.post(
+            f"{BASE_URL}/api/alias/random/new",
+            headers=headers,
+            json=data,
+            params=params,
+            timeout=10
+        )
 
-    if response.status_code != 201:
-        print(f"Error creating alias: {response.status_code} - {response.text}")
-        return
+        response.raise_for_status()
 
-    alias = response.json()
-    print(f"✓ Random alias created: {alias['email']}")
-    print(f"  ID: {alias['id']}")
-    if note:
-        print(f"  Note: {note}")
+        alias = response.json()
+        print(f"✓ Random alias created: {alias['email']}")
+        print(f"  ID: {alias['id']}")
+        if note:
+            print(f"  Note: {note}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error creating random alias: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
 
 
 def toggle_alias(config, alias_id):
     """Toggle an alias on/off"""
     headers = get_headers(config)
 
-    # First, get current status
-    response = requests.get(f"{BASE_URL}/api/aliases/{alias_id}", headers=headers)
+    try:
+        # First, get current status
+        response = requests.get(
+            f"{BASE_URL}/api/aliases/{alias_id}",
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
 
-    if response.status_code != 200:
-        print(f"Error: {response.status_code} - {response.text}")
-        return
+        alias = response.json()
+        current_status = alias['enabled']
 
-    alias = response.json()
-    current_status = alias['enabled']
+        toggle_response = requests.post(
+            f"{BASE_URL}/api/aliases/{alias_id}/toggle",
+            headers=headers,
+            timeout=10
+        )
+        toggle_response.raise_for_status()
 
-    # Now toggle
-    response = requests.post(
-        f"{BASE_URL}/api/aliases/{alias_id}/toggle",
-        headers=headers
-    )
+        new_status = "enabled" if not current_status else "disabled"
+        print(f"✓ Alias {alias['email']} is now {new_status}")
 
-    if response.status_code != 200:
-        print(f"Error toggling alias: {response.status_code} - {response.text}")
-        return
-
-    new_status = "enabled" if not current_status else "disabled"
-    print(f"✓ Alias {alias['email']} is now {new_status}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error toggling alias: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
 
 
 def delete_alias(config, alias_id):
     """Delete an alias"""
     headers = get_headers(config)
 
-    # First, get the alias to show what we're deleting
-    response = requests.get(f"{BASE_URL}/api/aliases/{alias_id}", headers=headers)
+    try:
+        response = requests.get(
+            f"{BASE_URL}/api/aliases/{alias_id}",
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
 
-    if response.status_code != 200:
-        print(f"Error: {response.status_code} - {response.text}")
-        return
+        alias_email = response.json()['email']
 
-    alias_email = response.json()['email']
+        # Confirm deletion
+        confirm = input(f"Are you sure you want to delete {alias_email}? (y/n): ")
+        if confirm.lower() != 'y':
+            print("Deletion cancelled.")
+            return
 
-    # Confirm deletion
-    confirm = input(f"Are you sure you want to delete {alias_email}? (y/n): ")
-    if confirm.lower() != 'y':
-        print("Deletion cancelled.")
-        return
+        # Now delete
+        delete_response = requests.delete(
+            f"{BASE_URL}/api/aliases/{alias_id}",
+            headers=headers,
+            timeout=10
+        )
+        delete_response.raise_for_status()
 
-    # Now delete
-    response = requests.delete(
-        f"{BASE_URL}/api/aliases/{alias_id}",
-        headers=headers
-    )
+        print(f"✓ Alias {alias_email} deleted successfully")
 
-    if response.status_code != 200:
-        print(f"Error deleting alias: {response.status_code} - {response.text}")
-        return
-
-    print(f"✓ Alias {alias_email} deleted successfully")
+    except requests.exceptions.RequestException as e:
+        print(f"Error deleting alias: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
 
 
 def alias_info(config, alias_id):
     """Show detailed information about an alias"""
     headers = get_headers(config)
-    response = requests.get(f"{BASE_URL}/api/aliases/{alias_id}", headers=headers)
 
-    if response.status_code != 200:
-        print(f"Error: {response.status_code} - {response.text}")
-        return
+    try:
+        response = requests.get(
+            f"{BASE_URL}/api/aliases/{alias_id}",
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
 
-    alias = response.json()
+        alias = response.json()
 
-    print(f"Alias: {alias['email']}")
-    print(f"ID: {alias['id']}")
-    print(f"Creation date: {alias.get('creation_date', 'N/A')}")
-    print(f"Enabled: {'Yes' if alias['enabled'] else 'No'}")
+        print(f"Alias: {alias['email']}")
+        print(f"ID: {alias['id']}")
+        print(f"Creation date: {format_datetime(alias.get('creation_date', 'N/A'))}")
+        print(f"Enabled: {'Yes' if alias['enabled'] else 'No'}")
 
-    if 'note' in alias and alias['note']:
-        print(f"Note: {alias['note']}")
+        if 'note' in alias and alias['note']:
+            print(f"Note: {alias['note']}")
 
-    if 'mailbox' in alias:
-        print(f"Mailbox: {alias['mailbox']['email']}")
+        if 'mailboxes' in alias and alias['mailboxes']:
+            print("\nMailboxes:")
+            for mailbox in alias['mailboxes']:
+                print(f"  - {mailbox['email']} (ID: {mailbox['id']})")
+        elif 'mailbox' in alias:
+            print(f"Mailbox: {alias['mailbox']['email']}")
 
-    if 'nb_forward' in alias:
-        print(f"Forwarded emails: {alias['nb_forward']}")
+        if 'nb_forward' in alias:
+            print(f"Forwarded emails: {alias['nb_forward']}")
 
-    if 'nb_reply' in alias:
-        print(f"Reply emails: {alias['nb_reply']}")
+        if 'nb_reply' in alias:
+            print(f"Reply emails: {alias['nb_reply']}")
 
-    if 'nb_block' in alias:
-        print(f"Blocked emails: {alias['nb_block']}")
+        if 'nb_block' in alias:
+            print(f"Blocked emails: {alias['nb_block']}")
 
-def select_suffix(config):
-    """Select suffix for new alias"""
-    headers = get_headers(config)
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting alias info: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
 
 
 def list_domains(config):
     """List all custom domains"""
     headers = get_headers(config)
-    response = requests.get(f"{BASE_URL}/api/custom_domains", headers=headers)
 
-    if response.status_code != 200:
-        print(f"Error: {response.status_code} - {response.text}")
-        return
+    try:
+        response = requests.get(
+            f"{BASE_URL}/api/custom_domains",
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
 
-    domains = response.json()['custom_domains']
+        domains = response.json()['custom_domains']
 
-    if not domains:
-        print("No custom domains found.")
-        return
+        if not domains:
+            print("No custom domains found.")
+            return
 
-    table_data = []
-    for domain in domains:
-        verified_status = "✓" if domain.get('is_verified', False) else "✗"
-        catch_all_status = "✓" if domain.get('catch_all', False) else "✗"
+        table_data = []
+        for domain in domains:
+            verified_status = "✓" if domain.get('is_verified', False) else "✗"
+            catch_all_status = "✓" if domain.get('catch_all', False) else "✗"
 
-        table_data.append([
-            domain['id'],
-            domain['domain_name'],
-            verified_status,
-            catch_all_status,
-            domain.get('nb_alias', 0)
-        ])
+            table_data.append([
+                domain['id'],
+                domain['domain_name'],
+                verified_status,
+                catch_all_status,
+                domain.get('nb_alias', 0)
+            ])
 
-    print(tabulate(table_data, headers=["ID", "Domain", "Verified", "Catch-All", "# Aliases"], tablefmt="grid"))
+        print(tabulate(table_data, headers=["ID", "Domain", "Verified", "Catch-All", "# Aliases"], tablefmt="grid"))
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error listing domains: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
 
 
 def domain_info(config, domain_id):
     """Show detailed information about a custom domain"""
     headers = get_headers(config)
-    # Note: There's no specific endpoint for getting a single domain by ID,
-    # so we'll get all domains and filter for the one we want
-    response = requests.get(f"{BASE_URL}/api/custom_domains", headers=headers)
 
-    if response.status_code != 200:
-        print(f"Error: {response.status_code} - {response.text}")
-        return
+    try:
+        response = requests.get(
+            f"{BASE_URL}/api/custom_domains",
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
 
-    domains = response.json()['custom_domains']
-    domain = next((d for d in domains if str(d['id']) == domain_id), None)
+        domains = response.json()['custom_domains']
+        domain = next((d for d in domains if str(d['id']) == domain_id), None)
 
-    if not domain:
-        print(f"Domain with ID {domain_id} not found.")
-        return
+        if not domain:
+            print(f"Domain with ID {domain_id} not found.")
+            return
 
-    print(f"Domain: {domain['domain_name']}")
-    print(f"ID: {domain['id']}")
-    print(f"Name: {domain.get('name', 'N/A')}")
-    print(f"Creation date: {format_datetime(domain.get('creation_date', 'N/A'))}")
-    print(f"Verified: {'Yes' if domain.get('is_verified', False) else 'No'}")
-    print(f"Catch-all: {'Enabled' if domain.get('catch_all', False) else 'Disabled'}")
-    print(f"Random prefix generation: {'Enabled' if domain.get('random_prefix_generation', False) else 'Disabled'}")
-    print(f"Number of aliases: {domain.get('nb_alias', 0)}")
+        print(f"Domain: {domain['domain_name']}")
+        print(f"ID: {domain['id']}")
+        print(f"Name: {domain.get('name', 'N/A')}")
+        print(f"Creation date: {format_datetime(domain.get('creation_date', 'N/A'))}")
+        print(f"Verified: {'Yes' if domain.get('is_verified', False) else 'No'}")
+        print(f"Catch-all: {'Enabled' if domain.get('catch_all', False) else 'Disabled'}")
+        print(f"Random prefix generation: {'Enabled' if domain.get('random_prefix_generation', False) else 'Disabled'}")
+        print(f"Number of aliases: {domain.get('nb_alias', 0)}")
 
-    if 'mailboxes' in domain and domain['mailboxes']:
-        print("\nLinked mailboxes:")
-        for mailbox in domain['mailboxes']:
-            print(f"  - {mailbox['email']} (ID: {mailbox['id']})")
-    else:
-        print("\nNo mailboxes linked to this domain.")
+        if 'mailboxes' in domain and domain['mailboxes']:
+            print("\nLinked mailboxes:")
+            for mailbox in domain['mailboxes']:
+                print(f"  - {mailbox['email']} (ID: {mailbox['id']})")
+        else:
+            print("\nNo mailboxes linked to this domain.")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting domain info: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
 
 
 def update_domain(config, domain_id, catch_all=None, random_prefix=None, name=None, mailboxes=None):
@@ -516,7 +598,6 @@ def update_domain(config, domain_id, catch_all=None, random_prefix=None, name=No
     if name is not None:
         data['name'] = name
     if mailboxes is not None:
-        # Split the comma-separated string into a list of integers
         try:
             data['mailbox_ids'] = [int(id.strip()) for id in mailboxes.split(',')]
         except ValueError:
@@ -527,75 +608,116 @@ def update_domain(config, domain_id, catch_all=None, random_prefix=None, name=No
         print("No changes specified. Use --catch-all, --random-prefix, --name, or --mailboxes.")
         return
 
-    response = requests.patch(
-        f"{BASE_URL}/api/custom_domains/{domain_id}",
-        headers=headers,
-        json=data
-    )
+    try:
+        response = requests.patch(
+            f"{BASE_URL}/api/custom_domains/{domain_id}",
+            headers=headers,
+            json=data,
+            timeout=10
+        )
+        response.raise_for_status()
 
-    if response.status_code != 200:
-        print(f"Error updating domain: {response.status_code} - {response.text}")
-        return
+        print(f"✓ Domain updated successfully")
+        domain_info(config, domain_id)
 
-    print(f"✓ Domain updated successfully")
-    # Display the updated domain info
-    domain_info(config, domain_id)
+    except requests.exceptions.RequestException as e:
+        print(f"Error updating domain: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
 
 
 def domain_trash(config, domain_id):
     """Show deleted aliases for a custom domain"""
     headers = get_headers(config)
-    response = requests.get(f"{BASE_URL}/api/custom_domains/{domain_id}/trash", headers=headers)
 
-    if response.status_code != 200:
-        print(f"Error: {response.status_code} - {response.text}")
-        return
+    try:
+        response = requests.get(
+            f"{BASE_URL}/api/custom_domains/{domain_id}/trash",
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
 
-    trash_data = response.json()
-    aliases = trash_data.get('aliases', [])
+        trash_data = response.json()
+        aliases = trash_data.get('aliases', [])
 
-    if not aliases:
-        print("No deleted aliases found for this domain.")
-        return
+        if not aliases:
+            print("No deleted aliases found for this domain.")
+            return
 
-    table_data = []
-    for alias in aliases:
-        # Convert timestamp to readable date if available
-        deleted_at = datetime.fromtimestamp(alias['deletion_timestamp']).strftime('%Y-%m-%d %H:%M:%S') \
-            if 'deletion_timestamp' in alias else 'N/A'
+        table_data = []
+        for alias in aliases:
+            deleted_at = format_datetime(alias.get('deletion_timestamp'))
 
-        table_data.append([
-            alias['alias'],
-            deleted_at
-        ])
+            table_data.append([
+                alias['alias'],
+                deleted_at
+            ])
 
-    print(tabulate(table_data, headers=["Alias", "Deleted At"], tablefmt="grid"))
+        print(tabulate(table_data, headers=["Alias", "Deleted At"], tablefmt="grid"))
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting domain trash: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
+
 
 def get_mailboxes(config):
     headers = get_headers(config)
-    response = requests.get(f"{BASE_URL}/api/v2/mailboxes", headers=headers)
 
-    if response.status_code != 200:
-        print(f"Error: {response.status_code} - {response.text}")
-        return
+    try:
+        response = requests.get(
+            f"{BASE_URL}/api/v2/mailboxes",
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
 
-    mailboxes = response.json()["mailboxes"]
+        mailboxes = response.json()["mailboxes"]
 
-    if mailboxes:
+        if not mailboxes:
+            print("No mailboxes found.")
+            return []
+
         return mailboxes
-    else:
-        print("No mailboxes found.")
-        return
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting mailboxes: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
+        return []
+
 
 def select_mailboxes(config):
-    """
-    Prompts the user to choose their mailbox(es) for alias generation.
-    """
+    """Prompts the user to choose their mailbox(es) for alias generation."""
     mailboxes = get_mailboxes(config)
+    if not mailboxes:
+        print("Unable to retrieve mailboxes. Please try again later.")
+        return []
+
     mailbox_ids = {}
 
     for mailbox in mailboxes:
         mailbox_ids[mailbox["email"]] = mailbox["id"]
+
+    if not mailbox_ids:
+        print("No mailboxes available.")
+        return []
 
     while True:
         selected_mailboxes = q.checkbox(
@@ -612,9 +734,13 @@ def select_mailboxes(config):
         selected_mailbox_ids.append(mailbox_ids[box])
     return selected_mailbox_ids
 
+
 def list_mailboxes(config):
     """List all mailboxes"""
     mailboxes = get_mailboxes(config)
+    if not mailboxes:
+        return
+
     table_data = []
     for mailbox in mailboxes:
         default_status = "✓" if mailbox.get('default', False) else ""
@@ -622,7 +748,7 @@ def list_mailboxes(config):
             mailbox['id'],
             mailbox['email'],
             default_status,
-            mailbox.get('creation_date', 'N/A')
+            format_datetime(mailbox.get('creation_date', 'N/A'))
         ])
 
     print(tabulate(table_data, headers=["ID", "Email", "Default", "Creation Date"], tablefmt="grid"))
@@ -637,13 +763,11 @@ def set_api_key(config, key):
 
 def view_config(config):
     """View the current configuration"""
-    # Check environment variable first
     env_api_key = os.environ.get('SIMPLELOGIN_API_KEY')
 
     print("Current configuration:")
 
     if env_api_key:
-        # Only show first 4 and last 4 characters of the API key
         masked_key = env_api_key[:4] + '*' * (len(env_api_key) - 8) + env_api_key[-4:]
         print(f"API Key (from environment): {masked_key}")
     elif config.get('api_key'):
@@ -666,7 +790,6 @@ def main():
 
     config = load_config()
 
-    # Handle configuration commands
     if args['config']:
         if args['set-key']:
             set_api_key(config, args['<api_key>'])
@@ -675,7 +798,6 @@ def main():
             view_config(config)
             return
 
-    # Handle aliases commands
     if args['aliases']:
         if args['list']:
             list_aliases(
@@ -699,15 +821,13 @@ def main():
                     prefix,
                     mailbox_ids=mailbox_ids,
                     note=args['--note'],
-                    name=args['--name'],
-                    # hostname=args['--hostname']
+                    name=args['--name']
                 )
             elif args['random']:
                 create_random_alias(
                     config,
                     mode=args['--mode'],
                     note=args['--note']
-                    # hostname=args['--hostname']
                 )
             return
         elif args['toggle']:
@@ -720,7 +840,6 @@ def main():
             alias_info(config, args['<alias_id>'])
             return
 
-    # Handle domains commands
     elif args['domains']:
         if args['list']:
             list_domains(config)
@@ -742,12 +861,10 @@ def main():
             domain_trash(config, args['<domain_id>'])
             return
 
-    # Handle mailboxes commands
     elif args['mailboxes'] and args['list']:
         list_mailboxes(config)
         return
 
-    # If we get here, no known command was properly handled
     print("Command not recognized. Use --help to see available commands.")
 
 
