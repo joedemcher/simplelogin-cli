@@ -11,6 +11,8 @@ Usage:
     simplelogin aliases info <alias_id>
     simplelogin contacts list <alias_id>
     simplelogin contacts create <alias_id> <contact>
+    simplelogin contacts delete <contact_id>
+    simplelogin contacts toggle <contact_id>
     simplelogin domains list
     simplelogin domains info <domain_id>
     simplelogin domains update <domain_id> [--catch-all=<bool>] [--random-prefix=<bool>] [--name=<name>] [--mailboxes=<ids>]
@@ -563,8 +565,11 @@ def create_contact(config, alias_id, contact):
         contact = response.json()
 
         if contact['existed']:
-            print("Contact already exists.")
-        print(f"Reverse alias: {contact['reverse_alias']}")
+            print("  Contact already exists.")
+        else:
+            print(f"  ✓ Contact created")
+        print(f"  ID: {contact['id']}")
+        print(f"  Reverse alias: {contact['reverse_alias']}")
 
     except requests.exceptions.RequestException as e:
         print(f"Error creating contact: {e}")
@@ -576,6 +581,62 @@ def create_contact(config, alias_id, contact):
             except:
                 print(f"Error message: {e.response.text}")
 
+def delete_contact(config, contact_id):
+    """ Delete a contact for an alias """
+    headers = get_headers(config)
+
+    try:
+        response = requests.delete(
+            f"{BASE_URL}/api/contacts/{contact_id}",
+            headers=headers,
+            timeout=10,
+        )
+        response.raise_for_status()
+
+        delete_response = response.json()
+
+        if delete_response['deleted']:
+            print("✓ Contact deleted successfully")
+        else:
+            print(" Contact not found")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error deleting contact: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
+
+def toggle_contact(config, contact_id):
+    """ Delete a contact for an alias """
+    headers = get_headers(config)
+
+    try:
+        response = requests.post(
+            f"{BASE_URL}/api/contacts/{contact_id}/toggle",
+            headers=headers,
+            timeout=10,
+        )
+        response.raise_for_status()
+
+        toggle_response = response.json()
+
+        new_status = "unblocked" if not toggle_response['block_forward'] else "blocked"
+        print(f"  Contact has been {new_status}")
+
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error toggling contact: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
 
 def list_domains(config):
     """List all custom domains"""
@@ -927,6 +988,12 @@ def main():
             return
         elif args['create']:
             create_contact(config, args['<alias_id>'], args['<contact>'])
+            return
+        elif args['delete']:
+            delete_contact(config, args['<contact_id>'])
+            return
+        elif args['toggle']:
+            toggle_contact(config, args['<contact_id>'])
             return
 
     elif args['domains']:
