@@ -48,7 +48,7 @@ from pathlib import Path
 from datetime import datetime
 import questionary as q
 
-__version__ = '0.2.3'
+__version__ = '0.2.4'
 
 # API Configuration
 BASE_URL = 'https://app.simplelogin.io'

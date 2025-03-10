@@ -51,7 +51,7 @@ pip install simplelogin
 Before using SimpleLogin CLI, you need to configure your API key:
 
 ```bash
-simplelogin-cli config set-key YOUR_API_KEY
+simplelogin config set-key YOUR_API_KEY
 ```
 
 You can create your API key in the SimpleLogin dashboard under API Keys.
