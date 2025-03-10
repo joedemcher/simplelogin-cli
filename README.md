@@ -135,6 +135,12 @@ simplelogin contacts list 123
 
 # Create a new contact for an alias
 simplelogin contacts create 123 user@example.com
+
+# Delete a contact for an alias
+simplelogin contacts delete 123
+
+# Toggle a contact (block/unblock)
+simplelogin contacts toggle 123
 ```
 
 ### Managing Custom Domains
