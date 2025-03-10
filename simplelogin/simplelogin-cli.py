@@ -3,19 +3,21 @@
 SimpleLogin CLI - A command line tool for managing SimpleLogin email aliases
 
 Usage:
-    simplelogin-cli aliases list [--page=<page>] [--pinned] [--disabled] [--enabled] [--query=<query>]
-    simplelogin-cli aliases create custom <prefix> [--mailboxes=<ids>] [--note=<note>] [--name=<name>]
-    simplelogin-cli aliases create random [--mode=<mode>] [--note=<note>]
-    simplelogin-cli aliases toggle <alias_id>
-    simplelogin-cli aliases delete <alias_id>
-    simplelogin-cli aliases info <alias_id>
-    simplelogin-cli domains list
-    simplelogin-cli domains info <domain_id>
-    simplelogin-cli domains update <domain_id> [--catch-all=<bool>] [--random-prefix=<bool>] [--name=<name>] [--mailboxes=<ids>]
-    simplelogin-cli domains trash <domain_id>
-    simplelogin-cli mailboxes list
-    simplelogin-cli config set-key <api_key>
-    simplelogin-cli config view
+    simplelogin aliases list [--page=<page>] [--pinned] [--disabled] [--enabled] [--query=<query>]
+    simplelogin aliases create custom <prefix> [--mailboxes=<ids>] [--note=<note>] [--name=<name>]
+    simplelogin aliases create random [--mode=<mode>] [--note=<note>]
+    simplelogin aliases toggle <alias_id>
+    simplelogin aliases delete <alias_id>
+    simplelogin aliases info <alias_id>
+    simplelogin contacts list <alias_id>
+    simplelogin contacts create <alias_id> <contact>
+    simplelogin domains list
+    simplelogin domains info <domain_id>
+    simplelogin domains update <domain_id> [--catch-all=<bool>] [--random-prefix=<bool>] [--name=<name>] [--mailboxes=<ids>]
+    simplelogin domains trash <domain_id>
+    simplelogin mailboxes list
+    simplelogin config set-key <api_key>
+    simplelogin config view
 
 Options:
     -h --help                    Show this help
@@ -44,7 +46,7 @@ from pathlib import Path
 from datetime import datetime
 import questionary as q
 
-__version__ = '0.2.0'
+__version__ = '0.2.2'
 
 # API Configuration
 BASE_URL = 'https://app.simplelogin.io'
@@ -80,7 +82,7 @@ def load_config():
         with open(config_file, 'w') as f:
             yaml.dump(default_config, f)
         print(f"Config file created at {config_file}")
-        print("Please set your API key with: simplelogin-cli config set-key <api_key>")
+        print("Please set your API key with: simplelogin config set-key <api_key>")
         sys.exit(0)
 
     with open(config_file, 'r') as f:
@@ -106,7 +108,7 @@ def get_headers(config):
         api_key = config.get('api_key', '')
 
     if not api_key:
-        print("API key not set. Please use 'simplelogin-cli config set-key <api_key>'")
+        print("API key not set. Please use 'simplelogin config set-key <api_key>'")
         print("Or set the SIMPLELOGIN_API_KEY environment variable")
         sys.exit(1)
 
@@ -418,13 +420,11 @@ def delete_alias(config, alias_id):
 
         alias_email = response.json()['email']
 
-        # Confirm deletion
         confirm = input(f"Are you sure you want to delete {alias_email}? (y/n): ")
         if confirm.lower() != 'y':
             print("Deletion cancelled.")
             return
 
-        # Now delete
         delete_response = requests.delete(
             f"{BASE_URL}/api/aliases/{alias_id}",
             headers=headers,
@@ -485,6 +485,89 @@ def alias_info(config, alias_id):
 
     except requests.exceptions.RequestException as e:
         print(f"Error getting alias info: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
+
+def list_contacts(config, alias_id, page=0):
+    """ List contacts for an alias """
+    headers = get_headers(config)
+    params = {'page_id': page, 'alias_id': alias_id}
+
+    try:
+        response = requests.get(
+            f"{BASE_URL}/api/aliases/{alias_id}/contacts",
+            headers=headers,
+            params=params,
+            timeout=10
+        )
+
+        response.raise_for_status()
+
+        contacts = response.json()['contacts']
+
+        if not contacts:
+            print("No contacts found.")
+            return
+
+        table_data = []
+        for contact in contacts:
+
+            block_forward =  "✓" if contact.get('block_forward', True) else "✗"
+
+            table_data.append([
+                contact['id'],
+                contact['contact'],
+                contact['reverse_alias'],
+                format_datetime(contact['last_email_sent_date']),
+                block_forward
+            ])
+
+        print(tabulate(
+            table_data,
+            headers=["ID", "Contact", "Reverse Alias", "Last Email Sent", "Block Forward"],
+            tablefmt="grid"
+        ))
+
+        if len(contacts) == 20:
+            print(f"\nShowing page {page}. Use --page to see more results.")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error connecting to SimpleLogin API: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status code: {e.response.status_code}")
+            try:
+                error_data = e.response.json()
+                print(f"Error message: {error_data.get('error')}")
+            except:
+                print(f"Error message: {e.response.text}")
+
+def create_contact(config, alias_id, contact):
+    """ Create a new contact for an alias """
+    headers = get_headers(config)
+    data = {"contact" : contact}
+
+    try:
+        response = requests.post(
+            f"{BASE_URL}/api/aliases/{alias_id}/contacts",
+            headers=headers,
+            timeout=10,
+            json=data
+        )
+        response.raise_for_status()
+
+        contact = response.json()
+
+        if contact['existed']:
+            print("Contact already exists.")
+        print(f"Reverse alias: {contact['reverse_alias']}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error creating contact: {e}")
         if hasattr(e, 'response') and e.response is not None:
             print(f"Status code: {e.response.status_code}")
             try:
@@ -836,6 +919,14 @@ def main():
             return
         elif args['info']:
             alias_info(config, args['<alias_id>'])
+            return
+
+    elif args['contacts']:
+        if args['list']:
+            list_contacts(config, args['<alias_id>'])
+            return
+        elif args['create']:
+            create_contact(config, args['<alias_id>'], args['<contact>'])
             return
 
     elif args['domains']:

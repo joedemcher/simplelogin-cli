@@ -10,6 +10,7 @@ SimpleLogin CLI provides a convenient way to manage your SimpleLogin email alias
 
 - List, create, toggle, and delete email aliases
 - View detailed information about your aliases
+- Manage contacts for your aliases
 - Manage custom domains 
 - View mailboxes associated with your account
 - Search and filter your aliases
@@ -124,6 +125,16 @@ simplelogin aliases delete 123
 
 # View detailed information about an alias
 simplelogin aliases info 123
+```
+
+#### Manage contacts
+
+```bash
+# List contacts for an alias
+simplelogin contacts list 123
+
+# Create a new contact for an alias
+simplelogin contacts create 123 user@example.com
 ```
 
 ### Managing Custom Domains
