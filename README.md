@@ -36,14 +36,9 @@ pip install simplelogin
    cd simplelogin-cli
    ```
 
-2. Install dependencies:
+2. Install dependencies/package:
    ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Install the package:
-   ```bash
-   pip install -e .
+   pip install .
    ```
 
 ## Configuration
