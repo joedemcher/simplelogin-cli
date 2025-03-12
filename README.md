@@ -65,7 +65,7 @@ export SIMPLELOGIN_API_KEY=YOUR_API_KEY
 To view your current configuration:
 
 ```bash
-simplelogin-cli config view
+simplelogin config view
 ```
 
 ## Usage
