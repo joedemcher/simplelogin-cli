@@ -20,6 +20,9 @@ Homepage = "https://github.com/joedemcher/simplelogin-cli"
 Issues = "https://github.com/joedemcher/simplelogin-cli/issues"
 Documentation = "https://github.com/joedemcher/simplelogin-cli/README.md"
 
+[project.scripts]
+simplelogin = "simplelogin.cli:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
