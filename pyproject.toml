@@ -1,6 +1,6 @@
 [project]
 name = "simplelogin"
-version = "0.2.4"
+version = "0.2.5"
 description = "A command-line interface for managing your SimpleLogin email aliases and custom domains."
 authors = [{ name="Joseph Demcher", email="git@joedem.ch"}]
 readme = "README.md"
